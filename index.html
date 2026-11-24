@@ -201,6 +201,11 @@ h1{font-size:clamp(30px,5vw,44px)}
 
 [hidden]{display:none!important}
 .artist .avatar{font-size:28px;opacity:1}
+
+.sharebox{margin-top:12px;padding:16px;border-radius:20px;background:color-mix(in srgb,var(--main) 18%,var(--card));border:1.5px solid var(--line)}
+.sharebox input{margin-top:6px}
+.friend{border-radius:26px;padding:18px;margin-top:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--fc) 45%,var(--card)),var(--card));border:1.5px solid var(--line);box-shadow:var(--lift);animation:rise .6s cubic-bezier(.2,.9,.3,1) both}
+.friend .big{font-size:22px;font-weight:800;line-height:1.3;margin:4px 0 10px}
 </style>
 </head>
 <body>
@@ -217,6 +222,7 @@ h1{font-size:clamp(30px,5vw,44px)}
 <div data-tab="mood" class="band">
   <h1 style="display:flex;align-items:center;gap:12px"><span id="logo" class="logo"></span>מצב רוח</h1>
   <p class="sub">בחרי איך את מרגישה ותקבלי שיר. אהבת אותו? האפליקציה תמצא עוד שירים עם אותה אווירה ותבנה לך פלייליסט.</p>
+  <div class="friend" id="friendCard" hidden style="margin:0 0 18px"></div>
   <div class="stage">
     <div class="disc" aria-hidden="true">
       <svg viewBox="0 0 400 400">
@@ -620,6 +626,18 @@ function showSong(){
       <button class="btn" data-act="skip">⏭️ דלגי, שיר אחר</button>
       <button class="btn" data-act="nope">👎 לא אהבתי</button>
       ${listen(song, 'btn')}
+    </div>
+    <div class="acts" style="margin-top:10px"><button class="btn solid" data-act="share" aria-expanded="false">📤 שתפי את מצב הרוח</button></div>
+    <div class="sharebox" id="shareBox" hidden>
+      <label for="myName">השם שלך (מה שהחברים יראו)</label>
+      <input type="text" id="myName" maxlength="20" placeholder="למשל נועה" value="${esc(myName)}">
+      <p class="small" id="sharePreview" style="margin:8px 0"></p>
+      <div class="acts">
+        <a class="btn solid" id="shareWa" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">📲 שלחי בוואטסאפ</a>
+        <button class="btn" id="shareNative" hidden>📤 שיתוף...</button>
+        <button class="btn" id="shareCopy">📋 העתיקי</button>
+      </div>
+      <p class="small" id="shareMsg" aria-live="polite" style="font-weight:600;margin:8px 0 0"></p>
     </div>
     <div class="row">
       <div class="box"><b>📺 מה לראות (בלי קשר לשיר)</b>${m.show.map(x => `<p>• ${x}</p>`).join('')}
@@ -1054,6 +1072,11 @@ window.addEventListener('hashchange', () => go(location.hash.slice(1)));
 go(location.hash.slice(1));
 
 $('res').addEventListener('click', e => {
+  if (e.target.closest('[data-act="share"]')) {
+    const box = $('shareBox'), open = box.hidden; box.hidden = !open;
+    e.target.closest('[data-act="share"]').setAttribute('aria-expanded', open);
+    if (open) updateShare(); return;
+  }
   const md = e.target.closest('[data-mode]');
   if (md && mood) { mode = md.dataset.mode; song = songForMood(moods[mood]); showSong(); return; }
   const b = e.target.closest('[data-act]'); if (!b || !song) return;
@@ -1189,6 +1212,65 @@ $('bkLoad').addEventListener('click', () => {
   $('bkLoadMsg').textContent = '✅ שוחזר! האפליקציה נטענת מחדש...'; setTimeout(() => location.reload(), 900);
 });
 $('bkIn').addEventListener('input', () => { bkArmed = false; $('bkLoad').textContent = '⬇️ שחזרי מהקוד'; $('bkLoadMsg').textContent = ''; });
+
+// שיתוף מצב רוח: בונים קישור שמכיל את מצב הרוח והשיר, וכשחברה פותחת אותו האפליקציה מציגה לה כרטיס
+const APP_URL = 'https://aviosis-cell.github.io/MOOD-APP/';
+let myName = load('moodName', '');
+const b64e = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d = str => decodeURIComponent(escape(atob(str.replace(/-/g,'+').replace(/_/g,'/'))));
+function shareData(){
+  const name = ($('myName') ? $('myName').value.trim() : myName).slice(0, 20);
+  const payload = {n: name, k: mood, t: song.title, a: song.artist, y: song.yt || ''};
+  const link = APP_URL + '#s-' + b64e(JSON.stringify(payload));
+  const who = name || 'חברה';
+  const text = `${moods[mood].emo} ${who} ${moods[mood].name} עכשיו ושומעת "${song.title}" של ${singer(song.artist)} 🎶\nבואי לשמוע גם:`;
+  return {text, link, full: text + '\n' + link};
+}
+function updateShare(){
+  const d = shareData();
+  $('sharePreview').textContent = d.text.replace('\n', ' ');
+  $('shareWa').href = 'https://wa.me/?text=' + encodeURIComponent(d.full);
+  $('shareNative').hidden = !navigator.share;
+  $('shareMsg').textContent = '';
+}
+document.addEventListener('input', e => {
+  if (e.target.id !== 'myName') return;
+  myName = e.target.value.trim(); save('moodName', myName); updateShare();
+});
+document.addEventListener('click', async e => {
+  if (e.target.id === 'shareNative') {
+    const d = shareData();
+    try { await navigator.share({text: d.text, url: d.link}); } catch (err) {}
+  }
+  if (e.target.id === 'shareCopy') {
+    const d = shareData();
+    try { await navigator.clipboard.writeText(d.full); $('shareMsg').textContent = '✅ הועתק! אפשר להדביק בכל אפליקציה.'; }
+    catch (err) { $('shareMsg').textContent = d.full; }
+  }
+});
+// קבלת שיתוף: אם נכנסו מקישור של חברה, מציגים כרטיס
+function showFriend(){
+  const h = location.hash; if (!h.startsWith('#s-')) return false;
+  let p; try { p = JSON.parse(b64d(h.slice(3))); } catch (e) { return false; }
+  if (!p || !moods[p.k] || typeof p.t !== 'string') return false;
+  const m = moods[p.k], who = String(p.n || 'חברה').slice(0, 20);
+  const fs = all().find(x => x.title === p.t && x.artist === p.a) || {id: 'f', title: String(p.t).slice(0, 80), artist: String(p.a || '').slice(0, 60), yt: /^[\w-]{11}$/.test(p.y || '') ? p.y : ''};
+  const card = $('friendCard'); card.hidden = false; card.style.setProperty('--fc', m.main);
+  card.innerHTML = `<div class="acts" style="justify-content:space-between"><span class="small">💌 שיתפו איתך</span><button class="mini" id="closeFriend" aria-label="סגירה">✕</button></div>
+    <div class="big">${m.emo} ${esc(who)} ${m.name} ושומעת "${esc(fs.title)}"</div>
+    <div class="small" style="margin-bottom:10px">${esc(fs.artist)}</div>
+    <div class="acts">${listen(fs, 'btn')}
+      ${fs.id !== 'f' ? `<button class="btn" data-addf="${fs.id}">➕ הוסיפי לפלייליסט</button>` : ''}
+      <button class="btn solid" data-fmood="${p.k}">${m.emo} גם אני רוצה שיר ${m.name === 'מלאת אנרגיה' ? 'מלא אנרגיה' : 'למצב הזה'}</button></div>`;
+  return true;
+}
+$('friendCard').addEventListener('click', e => {
+  if (e.target.closest('#closeFriend')) { $('friendCard').hidden = true; try { history.replaceState(null, '', location.pathname); } catch (err) {} }
+  const fm = e.target.closest('[data-fmood]'); if (fm) selectMood(fm.dataset.fmood);
+  const af = e.target.closest('[data-addf]');
+  if (af) { const id = af.dataset.addf; if (!lists.mix) lists.mix = []; if (!lists.mix.includes(id)) lists.mix.push(id); if (active === 'mix') playlist = lists.mix; savePl(); af.textContent = '✓ נוסף ל🎶 כללי'; }
+});
+if (showFriend()) { try { history.replaceState(null, '', location.pathname); } catch (err) {} }
 renderAll(); renderStats();
 }
 </script>
