@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>מצב רוח</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#fdf6fb">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="מצב רוח">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: playful, warm, a teen's own little app
+IDEA: a mood ring / record player: pick a face, the whole world changes colour
+PICTURE: big drawn face that morphs with the mood, sitting on a spinning vinyl
+COLOUR and TYPE: each mood owns the page colour; Rubik
+LAYOUT: face + chips, song card with like buttons, vibe-matched playlist, add-a-song, how it works
+*/
+:root{color-scheme:light dark;--bg:light-dark(#fff6d6,#2a2208);--card:light-dark(#ffffff,#1b1606);--ink:light-dark(#2b2100,#fff3c4);--main:#ffc93c;--deep:#b27b00;--soft:light-dark(#ffe9a3,#3d3210)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Rubik,system-ui,sans-serif;overflow-x:clip;transition:background .6s}
+.band{padding:clamp(22px,4vw,48px) max(5vw,16px);max-width:1000px;margin:auto}
+h1{font-size:clamp(34px,6vw,52px);line-height:1.05;margin:0 0 6px;font-weight:800}
+h2{font-size:26px;margin:0 0 12px;line-height:1.2}
+h3{margin:0 0 6px;font-size:19px}
+.sub{margin:0 0 20px;font-size:17px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center}
+.disc{aspect-ratio:1;max-width:360px;width:100%;margin:auto}
+.disc svg{width:100%;height:100%}
+.vinyl{transform-origin:200px 200px;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.face *{transition:all .5s ease}
+.chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+button{font-family:Rubik,sans-serif;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:4px solid var(--deep);outline-offset:2px}
+.chip{font-weight:600;font-size:17px;min-height:52px;border:3px solid var(--ink);border-radius:18px;background:var(--card);color:var(--ink);transition:transform .15s,background .3s}
+.chip:hover{transform:translateY(-2px) rotate(-1deg)}
+.chip[aria-pressed=true]{background:var(--main);color:#1a1300}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:26px;padding:22px;box-shadow:8px 8px 0 var(--main);transition:box-shadow .5s}
+.empty{text-align:center;font-size:18px}
+.song{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.cover{width:84px;height:84px;border-radius:18px;flex:none;display:grid;place-items:center;font-size:38px;background:var(--main)}
+.song .t{font-size:24px;font-weight:800;line-height:1.15}
+.song .a{opacity:.8}
+.vibes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;margin:16px 0}
+.vb{font-size:14px}
+.bar{height:10px;border-radius:9px;background:var(--soft);overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;background:var(--deep);border-radius:9px;transition:width .5s}
+.acts{display:flex;flex-wrap:wrap;gap:10px}
+.btn{min-height:46px;padding:0 18px;border-radius:999px;border:3px solid var(--ink);background:var(--card);color:var(--ink);font-weight:600;font-size:16px}
+.btn.on,.btn.solid{background:var(--ink);color:var(--bg)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:16px}
+.box{background:var(--soft);border-radius:18px;padding:14px}
+.box b{display:block;font-size:14px;opacity:.8}
+.box p{margin:2px 0 0;font-size:18px;font-weight:600}
+.list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.list li{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:10px 14px;border:2px solid var(--soft);flex-wrap:wrap}
+.list .grow{flex:1 1 160px}
+.match{font-weight:800;color:var(--deep);white-space:nowrap}
+.mini{min-height:40px;padding:0 14px;border-radius:999px;border:2px solid var(--ink);background:transparent;color:var(--ink);font-weight:600}
+.why{font-size:14px;opacity:.8;margin:6px 0 12px}
+form{display:grid;gap:12px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+label{font-size:15px;font-weight:600}
+input[type=text]{width:100%;font:16px Rubik,sans-serif;padding:11px 14px;border-radius:14px;border:2px solid var(--ink);background:var(--card);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--deep);height:30px}
+.how{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.how div{background:var(--card);border-radius:20px;padding:18px;border:2px dashed var(--ink)}
+.how p{margin:0;font-size:15px}
+.small{font-size:14px;opacity:.75}
+.plists{display:flex;flex-wrap:wrap;gap:8px;padding:2px 2px 8px;margin-bottom:12px}
+.plists button{flex:none;min-height:44px;padding:0 14px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:600 15px Rubik,sans-serif;cursor:pointer}
+.plists button[aria-pressed=true]{background:var(--main);color:#1a1300}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--card);border-radius:18px;padding:14px;border:2px solid var(--soft)}
+.stat b{display:block;font-size:30px;line-height:1.1}.stat span{font-size:14px;opacity:.8}
+.hrow{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:8px;align-items:center;margin:6px 0;font-size:15px}
+.hrow .bar{margin-top:3px}
+.edit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;width:100%;padding-top:8px}
+.edit label{font-size:14px}
+@media(max-width:600px){.edit{grid-template-columns:minmax(0,1fr)}}
+.mv{font:600 14px Rubik,sans-serif;min-height:40px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:0 10px;max-width:100%}
+#listenHint p{margin:4px 0 10px;font-size:20px;font-weight:800}
+.logo{width:56px;height:56px;flex:none;display:inline-block;transition:transform .4s}.logo svg *{transition:all .5s}.logo svg{width:100%;height:100%;display:block}
+.logos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.logos button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:18px;border:3px solid var(--soft);background:var(--card);color:var(--ink);font:600 14px Rubik,sans-serif;cursor:pointer}
+.logos button[aria-pressed=true]{border-color:var(--ink);box-shadow:4px 4px 0 var(--main)}
+.logos svg{width:64px;height:64px}
+.eqb{animation:eq 1s ease-in-out infinite alternate;transform-origin:bottom;transform-box:fill-box}
+@keyframes eq{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
+@media(prefers-reduced-motion:reduce){.eqb{animation:none}}
+.off{display:none!important}
+.tabs{position:sticky;top:0;z-index:20;display:flex;justify-content:center;gap:6px;padding:10px max(3vw,10px);background:var(--bg);border-bottom:3px solid var(--ink);transition:background .6s}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;flex:0 1 110px;min-height:56px;border:0;border-radius:16px;background:transparent;color:var(--ink);font:600 14px Rubik,sans-serif;cursor:pointer;padding:6px 4px}
+.tabs button span{font-size:22px;line-height:1}
+.tabs button[aria-current=page]{background:var(--main);color:#1a1300}
+@media(max-width:600px){
+  body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+  .tabs{position:fixed;top:auto;bottom:0;inset-inline:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));border-bottom:0;border-top:3px solid var(--ink);gap:2px}
+  .tabs button{flex:1 1 0;font-size:11px;min-height:54px;padding:4px 2px;border-radius:12px}
+  .tabs button span{font-size:21px}
+  .band{padding:16px 14px}
+  h1{font-size:30px}.sub{font-size:15px;margin-bottom:12px}h2{font-size:21px}
+  .stage{gap:12px}
+  .stage .disc{max-width:130px}
+  .chips{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .chip{font-size:14px;min-height:46px;border-width:2px;border-radius:14px;padding:2px}
+  .card{padding:16px;border-radius:20px;box-shadow:5px 5px 0 var(--main)}
+  .cover{width:64px;height:64px;font-size:30px}
+  .song .t{font-size:20px}
+  .acts{gap:8px}
+  .btn{min-height:44px;padding:0 14px;font-size:15px}
+  .list li{padding:10px;gap:8px}
+  .week{padding:10px;gap:4px}.day .dot{height:20px;font-size:12px}
+}
+
+.fig{position:relative}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.djs{display:flex;align-items:center;gap:10px;background:var(--soft);border-radius:16px;padding:10px 12px;flex-wrap:wrap}
+.djs .n{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:800;flex:none}
+.link{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 6px 0;padding:8px 14px;border-inline-start:6px solid var(--c);margin-inline-start:24px}
+.link select{font:15px Rubik,sans-serif;min-height:40px;border-radius:12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:0 8px}
+.pill{font-weight:800;color:var(--c);white-space:nowrap}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;background:var(--card);border-radius:22px;padding:16px;border:3px solid var(--ink)}
+.day{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;min-height:150px}
+.day .lbl{font-size:13px;font-weight:600;margin-top:6px}
+.day .dot{width:100%;max-width:44px;height:22px;border-radius:8px;display:grid;place-items:center;font-size:14px}
+.day.today .lbl{background:var(--ink);color:var(--bg);border-radius:8px;padding:0 6px}
+@media(max-width:600px){.chips{order:-1}.stage,.row,.how,.two,.vibes{grid-template-columns:minmax(0,1fr)}.disc{max-width:240px}}
+@media(prefers-reduced-motion:reduce){.vinyl{animation:none}*{transition:none!important}}
+
+/* PASTEL: soft, rounded, airy. Plum ink, mood colour as a gentle wash */
+:root{--ink:light-dark(#4a3b52,#f3e9f7);--card:light-dark(#ffffff,#2a2230);--line:light-dark(rgba(74,59,82,.12),rgba(243,233,247,.14));--lift:0 8px 24px light-dark(rgba(74,59,82,.08),rgba(0,0,0,.35))}
+body,button,input,select,textarea{font-family:'Varela Round',Rubik,system-ui,sans-serif!important}
+h1,h2,h3{font-weight:400;letter-spacing:-.01em}
+h1{font-size:clamp(30px,5vw,44px)}
+.chip,.card,.btn,.mini,.mv,.plists button,.logos button,.stat,.week,.list li,input[type=text],.link select,textarea{border:1.5px solid var(--line)!important}
+.chip{border-radius:20px;background:var(--card);box-shadow:var(--lift);font-weight:400}
+.chip:hover{transform:translateY(-2px)}
+.chip[aria-pressed=true]{background:var(--main);color:#3a2d40;box-shadow:0 10px 26px color-mix(in srgb,var(--main) 55%,transparent)}
+.card{border-radius:26px;box-shadow:var(--lift)!important}
+.btn{border-radius:999px;font-weight:400}
+.btn.solid,.btn.on{background:var(--ink);color:var(--card);border-color:transparent!important}
+.mini,.mv,.plists button{font-weight:400}
+.plists button[aria-pressed=true]{background:var(--main);color:#3a2d40}
+.list li{border-radius:20px;background:var(--card)}
+.box{border-radius:20px;background:color-mix(in srgb,var(--main) 22%,var(--card))}
+.cover{border-radius:22px;background:var(--main)}
+.bar{background:color-mix(in srgb,var(--main) 30%,var(--card))}.bar i{background:var(--deep)}
+.match{color:var(--deep)}
+.djs{background:color-mix(in srgb,var(--main) 20%,var(--card));border-radius:18px}
+.tabs{border:0!important;box-shadow:0 1px 0 var(--line)}
+.tabs button{font-weight:400}
+.tabs button[aria-current=page]{background:var(--main);color:#3a2d40}
+.week{border-radius:24px}
+.logos button[aria-pressed=true]{box-shadow:0 0 0 3px var(--main)}
+@media(max-width:600px){.tabs{box-shadow:0 -6px 20px light-dark(rgba(74,59,82,.08),rgba(0,0,0,.4));background:var(--card)}.card{box-shadow:var(--lift)!important}}
+
+/* MOTION: soft drifting colour blobs, pops, slides and floating hearts */
+.blobs{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.blobs i{position:absolute;width:55vmax;height:55vmax;border-radius:50%;filter:blur(60px);opacity:.38;transition:background 1s}
+.blobs i:nth-child(1){background:var(--main);top:-20vmax;right:-15vmax;animation:drift1 22s ease-in-out infinite alternate}
+.blobs i:nth-child(2){background:color-mix(in srgb,var(--main) 45%,#ffc8de);bottom:-25vmax;left:-20vmax;animation:drift2 26s ease-in-out infinite alternate}
+.blobs i:nth-child(3){background:color-mix(in srgb,var(--main) 40%,#c3e8ff);width:35vmax;height:35vmax;top:40%;left:30%;opacity:.25;animation:drift3 30s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(-12vmax,14vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(14vmax,-10vmax) scale(.9)}}
+@keyframes drift3{to{transform:translate(-18vmax,-12vmax) scale(1.25)}}
+.face{animation:bob 3.2s ease-in-out infinite;transform-origin:200px 200px;transform-box:view-box}
+@keyframes bob{50%{transform:translateY(-8px) rotate(-3deg)}}
+.chip[aria-pressed=true]{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(.85)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.btn:active,.mini:active,.chip:active,.tabs button:active{transform:scale(.94)}
+.in{animation:rise .5s cubic-bezier(.2,.9,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#recs li,#pl li,#allList li{animation:rise .45s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(var(--i,0) * 60ms)}
+.heart{position:fixed;z-index:50;pointer-events:none;font-size:22px;animation:float 1.1s ease-out forwards}
+@keyframes float{to{transform:translate(var(--dx),-120px) scale(1.4) rotate(var(--r));opacity:0}}
+.tabs button span{transition:transform .25s}
+.tabs button[aria-current=page] span{transform:translateY(-3px) scale(1.12)}
+@media(prefers-reduced-motion:reduce){.blobs i,.face,.chip[aria-pressed=true],.in,#recs li,#pl li,#allList li,.heart{animation:none!important}}
+
+.seg{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);border:1.5px solid var(--line);margin:0 0 14px}
+.seg button{min-height:42px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--ink);font-size:15px;cursor:pointer}
+.seg button[aria-selected=true]{background:var(--main);color:#3a2d40}
+.artists{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.artist{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;border-radius:24px;background:var(--card);border:1.5px solid var(--line);box-shadow:var(--lift);cursor:pointer;color:var(--ink);font:inherit;text-align:center;animation:rise .45s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(var(--i,0) * 35ms)}
+.artist:hover{transform:translateY(-3px)}
+.avatar{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:28px;color:#3a2d40;position:relative}
+.avatar::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px dashed color-mix(in srgb,var(--ink) 25%,transparent)}
+.artist b{font-size:16px;font-weight:400;line-height:1.2}
+.artist span{font-size:13px;opacity:.75}
+.ahead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.ahead .avatar{width:92px;height:92px;font-size:36px}
+@media(prefers-reduced-motion:reduce){.artist{animation:none}}
+
+[hidden]{display:none!important}
+.artist .avatar{font-size:28px;opacity:1}
+</style>
+</head>
+<body>
+<div class="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
+<nav class="tabs" id="tabs" aria-label="ניווט">
+  <button data-go="mood" aria-current="page"><span>🎧</span>מצב רוח</button>
+  <button data-go="playlist"><span>🎶</span>פלייליסט</button>
+  <button data-go="songs"><span>🔍</span>שירים</button>
+  <button data-go="dj"><span>🎛️</span>דיג'יי</button>
+  <button data-go="game"><span>🎮</span>משחק</button>
+  <button data-go="diary"><span>📅</span>יומן</button>
+  <button data-go="more"><span>➕</span>עוד</button>
+</nav>
+<div data-tab="mood" class="band">
+  <h1 style="display:flex;align-items:center;gap:12px"><span id="logo" class="logo"></span>מצב רוח</h1>
+  <p class="sub">בחרי איך את מרגישה ותקבלי שיר. אהבת אותו? האפליקציה תמצא עוד שירים עם אותה אווירה ותבנה לך פלייליסט.</p>
+  <div class="stage">
+    <div class="disc" aria-hidden="true">
+      <svg viewBox="0 0 400 400">
+        <g class="vinyl">
+          <circle cx="200" cy="200" r="190" fill="#4a3b52"/>
+          <circle cx="200" cy="200" r="165" fill="none" stroke="#5c4b66" stroke-width="3"/>
+          <circle cx="200" cy="200" r="140" fill="none" stroke="#5c4b66" stroke-width="3"/>
+          <path d="M80 120 A150 150 0 0 1 150 62" stroke="#ffffff22" stroke-width="10" fill="none" stroke-linecap="round"/>
+        </g>
+        <g class="face">
+          <circle cx="200" cy="200" r="112" fill="var(--main)"/>
+          <ellipse id="eL" cx="165" cy="180" rx="11" ry="15" fill="#1a1300"/>
+          <ellipse id="eR" cx="235" cy="180" rx="11" ry="15" fill="#1a1300"/>
+          <path id="bL" d="M150 152 L178 150" stroke="#1a1300" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path id="bR" d="M222 150 L250 152" stroke="#1a1300" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path id="mo" d="M160 235 Q200 250 240 235" stroke="#1a1300" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <circle cx="145" cy="222" r="12" fill="#ff7aa8" opacity=".45"/>
+          <circle cx="255" cy="222" r="12" fill="#ff7aa8" opacity=".45"/>
+        </g>
+      </svg>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="card" id="listenHint" hidden style="box-shadow:none;margin-top:18px"></div>
+</div>
+
+<div data-tab="mood" class="band" style="padding-top:0">
+  <div class="card empty" id="res">👆 לחצי על מצב רוח כדי לקבל שיר</div>
+  <div class="card" style="box-shadow:none;margin-top:22px">
+    <h2>🎚️ המצב שלי היום</h2>
+    <p class="small" style="margin-top:-6px">לא בטוחה מה את מרגישה? הזיזי את הסליידרים, והאפליקציה תנחש בשבילך.</p>
+    <div class="two">
+      <div><label for="gE">⚡ כמה אנרגיה יש לך? <span id="gEo">5</span></label><input type="range" id="gE" min="0" max="10" value="5"></div>
+      <div><label for="gH">😊 כמה טוב לך? <span id="gHo">5</span></label><input type="range" id="gH" min="0" max="10" value="5"></div>
+    </div>
+    <div class="acts" style="align-items:center;margin-top:10px">
+      <span style="font-size:20px;font-weight:800" id="guess"></span>
+      <button class="btn solid" id="guessGo">כן, זו אני!</button>
+    </div>
+  </div>
+</div>
+
+<div data-tab="mood" class="band" id="recBand" hidden>
+  <h2>✨ שירים עם אותה אווירה</h2>
+  <p class="why" id="recWhy"></p>
+  <ul class="list" id="recs"></ul>
+  <div class="acts" style="margin-top:12px"><button class="btn solid" id="addAll">➕ הוסיפי את כולם לפלייליסט</button></div>
+</div>
+
+<div data-tab="playlist" class="band">
+  <h2>🎶 הפלייליסטים שלי</h2>
+  <p class="small" style="margin-top:-6px">לכל מצב רוח יש פלייליסט משלו. כשבוחרים מצב רוח, שירים שתוסיפי נכנסים לפלייליסט שלו.</p>
+  <div class="plists" id="lists" role="group" aria-label="בחירת פלייליסט"></div>
+  <form id="newList" class="acts" style="margin-bottom:12px;align-items:center">
+    <input type="text" id="newListName" maxlength="24" placeholder="שם לפלייליסט חדש, למשל לימודים" aria-label="שם לפלייליסט חדש" style="flex:1 1 180px;width:auto">
+    <button class="btn" type="submit">➕ צרי פלייליסט</button>
+    <button class="btn" type="button" id="delList" hidden>🗑️ מחקי את הפלייליסט הזה</button>
+  </form>
+  <div class="acts" id="plBar" style="margin-bottom:12px;align-items:center">
+    <a class="btn solid" id="playNext" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">▶️ נגני את הפלייליסט</a>
+    <button class="btn" id="shuf" aria-pressed="false">🔀 ערבוב</button>
+    <span class="small" id="nowPl" aria-live="polite"></span>
+  </div>
+  <div class="acts" id="plAll" style="margin-bottom:12px;align-items:center">
+    <a class="btn solid" id="ytAll" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">📺 כל הפלייליסט ביוטיוב</a>
+    <button class="btn" id="copyList2">📋 העתיקי רשימה</button>
+  </div>
+  <p class="small" id="copyMsg2" aria-live="polite" style="margin:-4px 0 10px"></p>
+  <textarea id="copyBox2" hidden readonly rows="6" style="width:100%;font:15px Rubik,sans-serif;border-radius:14px;border:2px solid var(--ink);padding:10px;margin-bottom:12px;background:var(--card);color:var(--ink)" aria-label="רשימת השירים להעתקה"></textarea>
+  <input type="text" id="plSearch" placeholder="🔍 חיפוש בפלייליסט" style="margin-bottom:12px" aria-label="חיפוש בפלייליסט">
+  <p class="small" id="moveMsg" aria-live="polite" style="margin:0 0 8px;font-weight:600"></p>
+  <ul class="list" id="pl"></ul>
+  <p class="small" id="plEmpty">הפלייליסט הזה עוד ריק. בחרי מצב רוח, תני לייק לשיר או הוסיפי מההצעות.</p>
+</div>
+
+<div data-tab="dj" class="band">
+  <h2>🎛️ מצב דיג'יי</h2>
+  <p class="small" style="margin-top:-6px">כאן עורכים את הפלייליסט כמו סט של דיג'יי: מסדרים את השירים, בוחרים איך עוברים משיר לשיר, ומוסיפים שיר מגשר כשהקפיצה גדולה מדי.</p>
+  <p style="font-weight:600;margin:-4px 0 12px" id="djWhich"></p>
+  <div class="card" style="box-shadow:none">
+    <h3>📈 עקומת האנרגיה של הסט</h3>
+    <div class="fig" id="curveBox" style="min-height:150px"><svg id="curve" role="img" aria-label="עקומת אנרגיה"></svg></div>
+    <div class="acts" style="margin:12px 0 16px">
+      <button class="btn solid" id="autoDJ">🪄 סדרי לי כמו דיג'יי</button>
+      <a class="btn solid" id="djYtAll" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">📺 כל הסט ביוטיוב</a>
+      <a class="btn" id="djPlay" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">▶️ נגני את הסט</a>
+      <button class="btn" id="copyList">📋 העתיקי רשימה</button>
+      <span class="small" id="djScore"></span>
+    </div>
+    <p class="small" id="copyMsg" aria-live="polite" style="margin:-6px 0 10px"></p>
+    <textarea id="copyBox" hidden readonly rows="6" style="width:100%;font:15px Rubik,sans-serif;border-radius:14px;border:2px solid var(--ink);padding:10px;margin-bottom:12px;background:var(--card);color:var(--ink)" aria-label="רשימת השירים להעתקה"></textarea>
+    <div id="dj"></div>
+    <p class="small" id="djEmpty">תוסיפי לפחות 2 שירים לפלייליסט כדי להתחיל לערוך סט.</p>
+  </div>
+</div>
+
+<div data-tab="game" class="band">
+  <h2>🎮 משחק: נחשי את האווירה</h2>
+  <p class="small" style="margin-top:-6px">מופיע שיר, ואת מנחשת לפי השם כמה אנרגיה וכמה שמחה יש בו. 5 סיבובים, עד 100 נקודות בכל סיבוב.</p>
+  <div class="card" style="box-shadow:none" id="game">
+    <div class="acts" style="justify-content:space-between;align-items:center">
+      <span class="small" id="gRound"></span>
+      <span style="font-weight:800" id="gScore"></span>
+    </div>
+    <div class="song" style="margin:12px 0 16px"><div class="cover">🎵</div>
+      <div><div class="t" id="gT"></div><div class="a" id="gA"></div></div></div>
+    <div class="two">
+      <div><label for="qE">⚡ כמה אנרגיה? <span id="qEo">5</span></label><input type="range" id="qE" min="0" max="10" value="5"></div>
+      <div><label for="qH">😊 כמה שמח? <span id="qHo">5</span></label><input type="range" id="qH" min="0" max="10" value="5"></div>
+    </div>
+    <div id="gOut" style="margin:12px 0;font-size:18px;font-weight:600;min-height:28px" aria-live="polite"></div>
+    <div class="acts"><button class="btn solid" id="gBtn">בדקי ניחוש</button></div>
+    <p class="small" id="gBest" style="margin:12px 0 0"></p>
+  </div>
+</div>
+
+<div data-tab="songs" class="band">
+  <h2>🔍 כל השירים</h2>
+  <div class="seg" role="tablist" aria-label="תצוגה">
+    <button role="tab" data-view="songs" aria-selected="true">🎵 שירים</button>
+    <button role="tab" data-view="artists" aria-selected="false">🎤 אמנים</button>
+  </div>
+  <p class="small" style="margin-top:-6px">כל השירים באפליקציה. אפשר לשמוע, להוסיף לכל פלייליסט, ולתקן את מספרי האווירה ב-✏️. שיר שחסר? הוסיפי אותו למטה.</p>
+  <input type="text" id="allSearch" placeholder="🔍 חיפוש שיר או זמר" aria-label="חיפוש שיר או זמר" style="margin-bottom:12px">
+  <div class="acts" style="margin-bottom:12px;align-items:center"><span class="small">סדר לפי:</span>
+    <select class="mv" id="allSort" aria-label="סדר לפי"><option value="hot">🔥 הכי פופולריים</option><option value="title">שם</option><option value="e">⚡ אנרגיה</option><option value="h">😊 שמחה</option><option value="t">🏃 מהירות</option><option value="a">🎸 אקוסטי</option></select>
+    <span class="small" id="allMsg" aria-live="polite" style="font-weight:600"></span></div>
+  <ul class="list" id="allList"></ul>
+  <div id="artistView" hidden>
+    <div class="artists" id="artistGrid"></div>
+    <div id="artistPage" hidden></div>
+  </div>
+  <details id="addBox" class="card" style="box-shadow:none;margin-top:16px;padding:0">
+    <summary style="cursor:pointer;padding:18px 20px;font-size:19px">➕ לא מצאת שיר שאת אוהבת? הוסיפי אותו</summary>
+    <div style="padding:0 20px 20px">
+  <form id="addForm" >
+    <div class="two">
+      <div><label for="fT">שם השיר</label><input type="text" id="fT" required></div>
+      <div><label for="fA">זמר או להקה</label><input type="text" id="fA" required></div>
+    </div>
+    <div><label for="fY">קישור לשיר ביוטיוב (לא חובה)</label><input type="text" id="fY" inputmode="url" placeholder="https://www.youtube.com/watch?v=..." dir="ltr"></div>
+    <p class="small" style="margin:-6px 0 0">עם קישור, השיר ייכנס גם ל"כל הפלייליסט ביוטיוב".</p>
+    <div><span style="font-weight:600">איך השיר הזה מרגיש?</span>
+      <div class="plists" id="fMood" role="group" aria-label="מצב הרוח של השיר" style="margin-top:6px"></div>
+      <p class="small" style="margin:-4px 0 0">בחרי מצב רוח, והמספרים יתמלאו לבד. השיר גם ייכנס לפלייליסט של מצב הרוח הזה.</p></div>
+    <details><summary style="cursor:pointer;font-weight:600;padding:6px 0">🎚️ לכוונן את המספרים בעצמך (לא חובה)</summary>
+    <div class="two" id="sliders" style="margin-top:8px"></div></details>
+    <div><button class="btn solid" type="submit">שמרי שיר</button> <span id="added" class="small"></span></div>
+  </form>
+    </div>
+  </details>
+</div>
+
+<div data-tab="diary" class="band">
+  <h2>📅 היומן שלי: השבוע האחרון</h2>
+  <div class="week" id="week"></div>
+  <p class="small" id="weekSum" style="margin-top:12px"></p>
+</div>
+
+<div data-tab="diary" class="band">
+  <h2>📊 הסטטיסטיקה שלי</h2>
+  <div class="statgrid" id="statNums"></div>
+  <div class="two" style="margin-top:14px">
+    <div class="card" style="box-shadow:none"><h3>🎧 השירים שהכי שמעת</h3><div id="statSongs"></div></div>
+    <div class="card" style="box-shadow:none"><h3>💛 מצבי הרוח שלי (החודש)</h3><div id="statMoods"></div></div>
+  </div>
+  <div class="card" style="box-shadow:none;margin-top:14px"><h3>🧠 מה האפליקציה למדה עלייך</h3>
+    <p class="small" style="margin-top:0">לפי השירים שאהבת ❤️ והשירים ששמת בפלייליסט של כל מצב רוח, האפליקציה מתאימה את ההצעות בשבילך.</p>
+    <div id="statLearn"></div></div>
+</div>
+
+<div data-tab="more" class="band">
+  <h2>💾 גיבוי והעברה בין מכשירים</h2>
+  <p class="small" style="margin-top:-6px">הפלייליסטים, השירים שהוספת, היומן והשיאים נשמרים רק במכשיר הזה. כדי להעביר אותם למכשיר אחר: מעתיקים כאן קוד, שולחים אותו לעצמך (למשל בוואטסאפ), ומדביקים במכשיר השני.</p>
+  <div class="card" style="box-shadow:none">
+    <h3>1. במכשיר הישן</h3>
+    <div class="acts"><button class="btn solid" id="bkCopy">📋 העתיקי קוד גיבוי</button></div>
+    <p class="small" id="bkMsg" aria-live="polite" style="font-weight:600"></p>
+    <h3 style="margin-top:14px">2. במכשיר החדש</h3>
+    <label for="bkIn">הדביקי כאן את קוד הגיבוי</label>
+    <textarea id="bkIn" rows="4" dir="ltr" style="width:100%;font:14px monospace;border-radius:14px;padding:10px;margin:6px 0 10px;background:var(--card);color:var(--ink)"></textarea>
+    <div class="acts"><button class="btn" id="bkLoad">⬇️ שחזרי מהקוד</button></div>
+    <p class="small" id="bkLoadMsg" aria-live="polite" style="font-weight:600"></p>
+  </div>
+</div>
+
+<div data-tab="more" class="band">
+  <h2>🎨 בחרי לוגו</h2>
+  <p class="small" style="margin-top:-6px">הלוגו מופיע ליד השם של האפליקציה, ומשנה צבע לפי מצב הרוח.</p>
+  <div class="logos" id="logos"></div>
+</div>
+
+<div data-tab="more" class="band">
+  <h2>איך זה עובד? 🤖</h2>
+  <div class="how">
+    <div><h3>🎚️ לכל שיר יש "טביעת אצבע"</h3><p>ארבעה מספרים מ-0 עד 10: כמה אנרגיה, כמה שמח, כמה מהיר וכמה אקוסטי (גיטרה ופסנתר לעומת אלקטרוני).</p></div>
+    <div><h3>📏 מודדים מרחק</h3><p>כשאת אוהבת שיר, האפליקציה בודקת כמה רחוקים המספרים של כל שיר אחר מהמספרים שלו. ככל שקרוב יותר, האווירה דומה יותר.</p></div>
+    <div><h3>🚫 לא אותו זמר</h3><p>לפני שמציעים, מוציאים מהרשימה שירים של אותו אמן. ככה מקבלים אווירה דומה ולא עוד שיר של אותו זמר.</p></div>
+    <div><h3>🔄 להחליף מצב רוח</h3><p>כשבוחרים "עזרי לי להחליף", האפליקציה מחפשת שירים שנמצאים בדרך בין מה שאת מרגישה עכשיו לבין מצב רוח טוב יותר. לא קופצים ישר מעצב למסיבה, אלא עוברים בהדרגה.</p></div>
+    <div><h3>🎧 ככה עושים בספוטיפיי</h3><p>שם יש מיליוני שירים ומאות "מספרים" לכל שיר, אבל הרעיון זהה. זו בינה מלאכותית!</p></div>
+  </div>
+  <p class="small" style="margin-top:14px">כל השירים אמיתיים, ולכל אחד יש כפתור ▶️ להאזנה ביוטיוב. את מספרי האווירה ניחשנו לפי איך שהשירים נשמעים, ואפשר לשנות אותם. השירים שתוסיפי נשמרים רק בדפדפן שלך.</p>
+</div>
+
+<script>
+{
+const F = [['e','⚡ אנרגיה'],['h','😊 שמחה'],['t','🏃 מהירות'],['a','🎸 אקוסטי']];
+const moods = {
+  happy:{name:'שמחה',emo:'😄',main:'#ffd970',deep:'#a87a00',bg:['#fffaf0','#2a2208'],soft:['#ffe9a3','#3d3210'],eyes:15,brow:'flat',mouth:'M155 228 Q200 285 245 228',v:{e:7,h:9,t:7,a:3},
+    show:['קומדיית סיטקום קלילה','תוכנית אפייה','הרפתקאות עם חברים'],tip:['שלחי לחברה את השיר הכי שמח שלך','רקדי שיר שלם בלי לעצור']},
+  sad:{name:'עצובה',emo:'🥺',main:'#b3cdff',deep:'#3e64b0',bg:['#f5f8ff','#0c1830'],soft:['#cfe0ff','#16264a'],eyes:12,brow:'sad',mouth:'M162 250 Q200 222 238 250',v:{e:2,h:2,t:3,a:8},
+    show:['דרמה מחממת לב','סרט אנימציה מצחיק','סדרה אהובה שכבר ראית'],tip:['זה בסדר להיות עצובה. אולי לדבר עם מישהו שאת אוהבת?','שמיכה, שתייה חמה ופרק אחד']},
+  bored:{name:'משועממת',emo:'😑',main:'#d9cfff',deep:'#6a54c9',bg:['#f8f6ff','#18122e'],soft:['#e3d9ff','#2a2150'],eyes:5,brow:'flat',mouth:'M165 240 L235 240',v:{e:6,h:6,t:6,a:4},
+    show:['סדרת מסתורין','סדרה תיעודית על חיות','ריאליטי של יצירה'],tip:['למדי ריקוד קצר מסרטון','זמן מעולה לבנות עוד אפליקציה 😉']},
+  energy:{name:'מלאת אנרגיה',emo:'⚡',main:'#ffb49c',deep:'#c4502e',bg:['#fff6f2','#2e0f08'],soft:['#ffd6cb','#4a1a10'],eyes:18,brow:'up',mouth:'M150 225 Q200 295 250 225 Z',v:{e:10,h:7,t:9,a:1},
+    show:['סדרת אקשן','תחרות ריקוד','גיבורי-על'],tip:['הליכה מהירה עם אוזניות','אתגר קפיצות של שיר אחד']},
+  stressed:{name:'לחוצה',emo:'😬',main:'#ffc8de',deep:'#b0416f',bg:['#fff6fa','#2e0c1c'],soft:['#ffd6ea','#4a1830'],eyes:16,brow:'sad',mouth:'M160 240 L175 232 L190 242 L205 232 L220 242 L240 234',v:{e:2,h:5,t:2,a:8},
+    show:['סדרה קצרה ומצחיקה','תוכנית שיפוצים','סרט טבע רגוע'],tip:['נשימה: 4 שניות פנימה, 4 החוצה, חמש פעמים','כתבי על דף מה מלחיץ אותך']},
+  calm:{name:'רגועה',emo:'😌',main:'#a8e6cc',deep:'#2a8a64',bg:['#f3fbf7','#0a2219'],soft:['#c9f2e0','#143a2b'],eyes:3,brow:'flat',mouth:'M165 235 Q200 258 235 235',v:{e:3,h:6,t:3,a:7},
+    show:['סדרה על טיולים','אנימציה שקטה','סדרה לצפייה עם המשפחה'],tip:['זמן טוב לצייר או לכתוב','הכיני שתייה וצאי למרפסת']},
+  love:{name:'מאוהבת',emo:'🥰',main:'#ffbdd6',deep:'#c2185b',bg:['#fff5f9','#2e0a1a'],soft:['#ffd3e6','#4a1530'],eyes:14,brow:'up',mouth:'M158 230 Q200 272 242 230',v:{e:5,h:8,t:5,a:6},
+    show:['קומדיה רומנטית','סדרת נעורים מתוקה','סרט אנימציה מרגש'],tip:['כתבי ביומן מה גורם לך לחייך','הכיני פלייליסט רק של שירים מתוקים']},
+  angry:{name:'כועסת',emo:'😤',main:'#ffaaaa',deep:'#b22a2a',bg:['#fff6f6','#2a0707'],soft:['#ffc9c9','#4a1212'],eyes:9,brow:'angry',mouth:'M165 248 Q200 228 235 248',v:{e:9,h:2,t:8,a:2},
+    show:['סדרת אקשן עם הרבה תנועה','קומדיה שמצחיקה בטירוף','תחרות ספורט'],tip:['תוציאי אנרגיה: ריקוד פרוע או ריצה במקום','כתבי מה הכעיס אותך, ואז קרעי את הדף']},
+  tired:{name:'עייפה',emo:'🥱',main:'#ddcdc5',deep:'#6d4c41',bg:['#fbf8f6','#1f1512'],soft:['#e6d7d0','#3a2a24'],eyes:3,brow:'sad',mouth:'M185 240 Q200 262 215 240 Q200 226 185 240 Z',v:{e:2,h:5,t:2,a:6},
+    show:['פרק קצר של סדרה מצחיקה','תוכנית טבע מרגיעה','סדרה שאפשר להירדם עליה'],tip:['כוס מים ו-10 דקות בלי מסך','אולי פשוט ללכת לישון מוקדם היום 😴']},
+  missing:{name:'מתגעגעת',emo:'🥹',main:'#c3cbf3',deep:'#3949ab',bg:['#f6f7fe','#10142e'],soft:['#d6dbff','#1e2550'],eyes:13,brow:'sad',mouth:'M168 242 Q200 236 232 242',v:{e:3,h:3,t:3,a:8},
+    show:['סדרה על חברות ומשפחה','סרט ישן שראיתן ביחד','דרמה מחממת לב'],tip:['שלחי הודעה למי שאת מתגעגעת אליו','תסתכלי על תמונות משותפות']},
+  excited:{name:'נרגשת',emo:'🤩',main:'#ffd394',deep:'#c06000',bg:['#fff9f0','#2b1d03'],soft:['#ffe5a0','#45300a'],eyes:18,brow:'up',mouth:'M150 225 Q200 290 250 225 Z',v:{e:9,h:9,t:8,a:2},
+    show:['סדרת הרפתקאות','תחרות כישרונות','סדרת גיבורים'],tip:['ספרי למישהו מה מרגש אותך','צרי פלייליסט לקראת הדבר המרגש']}
+};
+// לאיזה מצב רוח כדאי לעבור כשרוצים להחליף
+const switchTo = {happy:'calm',sad:'happy',bored:'excited',energy:'calm',stressed:'calm',calm:'happy',love:'happy',angry:'calm',tired:'happy',missing:'calm',excited:'calm'};
+let mode = 'match';
+// דוגמאות לסרטים אמיתיים לכל מצב רוח
+const movies = {
+  happy:['פדינגטון 2','Sing'],
+  sad:['למעלה (Up)','הקול בראש (Inside Out)'],
+  bored:['זוטרופוליס','אנולה הולמס'],
+  energy:['Spider-Man: Into the Spider-Verse','משפחת סופר-על (The Incredibles)'],
+  stressed:['השכן שלי טוטורו',"Kiki's Delivery Service"],
+  calm:['רטטוי','לוקה'],
+  love:['יומני הנסיכה','Enchanted'],
+  angry:['School of Rock','קונג פו פנדה'],
+  tired:['מוצאים את נמו','אנקנטו'],
+  missing:['קוקו','צעצוע של סיפור 3'],
+  excited:['בחזרה לעתיד',"ג'ומנג'י: ברוכים הבאים לג'ונגל"]
+};
+const brows = {flat:['M150 152 L178 150','M222 150 L250 152'],sad:['M150 156 L178 146','M222 146 L250 156'],up:['M150 146 L178 138','M222 138 L250 146'],angry:['M150 144 L180 158','M220 158 L250 144']};
+// [שם, אמן, אנרגיה, שמחה, מהירות, אקוסטי, מספר הסרטון ביוטיוב]
+const base = [
+ ['Wait For It','Hamilton (Leslie Odom Jr.)',5,4,6,5,'ulsLI029rH0'],['Helpless','Hamilton (Phillipa Soo)',5,8,6,4,'6frd_dHxPRs'],
+ ['You Will Be Found','Dear Evan Hansen (Ben Platt)',5,6,5,6,'4LZsBeJiHUM'],
+ ['This Is Me','The Greatest Showman (Keala Settle)',8,7,7,3,'CjxugyZCfuw'],['Rewrite the Stars','Zac Efron & Zendaya',6,5,6,4,'gdjR2lvIfJ4'],
+ ['Surface Pressure','Encanto (Jessica Darrow)',7,6,7,2,'tQwVKr8rCYw'],['How Far I\'ll Go','Moana (Auliʻi Cravalho)',6,7,6,4,'cPAbx5kgCJo'],
+ ['Into the Unknown','Frozen 2 (Idina Menzel)',7,5,6,3,'gIOyB9ZXn8s'],
+ ['Shake It Off','Taylor Swift',8,9,8,2,'nfWlot6h_JM'],['Love Story','Taylor Swift',6,8,6,5,'8xg3vE8Ie_E'],
+ ['drivers license','Olivia Rodrigo',3,2,3,6,'ZmDBbnmKpqQ'],
+ ['Perfect','Ed Sheeran',3,7,3,8,'2Vv-BfVoq4g'],['Shape of You','Ed Sheeran',7,8,7,2,'JGwWNGJdvx8'],
+ ['ocean eyes','Billie Eilish',2,4,2,5,'viimfQi_pUw'],['Birds of a Feather','Billie Eilish',5,7,5,4,'V9PVRfjEBTI',1],
+ ['Levitating','Dua Lipa',8,9,8,1,'WHuBW3qKm9g'],['As It Was','Harry Styles',7,6,8,2,'H5v3kku4y6Q',1],
+ ['Happy','Pharrell Williams',8,10,8,2,'y6Sxv-sUYtM'],['Someone You Loved','Lewis Capaldi',3,2,3,7,'zABLecsR5UE'],
+ ['Easy On Me','Adele',3,3,3,8,'U3ASj1L6_sY'],['Believer','Imagine Dragons',9,4,8,1,'7wtfhZwyrcc'],
+ ['Viva La Vida','Coldplay',7,6,7,4,'dvgZkm1xWPE'],['Fix You','Coldplay',3,3,3,7,'k4V3Mo61fJM'],
+ ['Unstoppable','Sia',8,7,7,1,'cxjvTXo9WWM'],['Roar','Katy Perry',8,9,8,1,'CevxZvSJLk8'],['Espresso','Sabrina Carpenter',7,8,7,1,'eVli-tstM5E',1],
+ ['אני ואתה','אריק איינשטיין',3,6,3,9,'PixfMer7J5M'],
+ ['Anti-Hero','Taylor Swift',6,5,6,3,'b1kbLwvqugk'],['Blank Space','Taylor Swift',7,7,6,2,'e-ORhEE9VVg'],['willow','Taylor Swift',4,5,4,7,'RsEZmictANA'],
+ ['Photograph','Ed Sheeran',3,4,3,8,'nSDgHBxUbVQ'],['Thinking Out Loud','Ed Sheeran',4,7,3,7,'lp-EO5I60KA'],
+ ['Yellow','Coldplay',5,6,5,6,'yKNxeF4KMsY'],['A Sky Full of Stars','Coldplay',8,8,8,2,'VPRjCeoBqrI'],['Hymn for the Weekend','Coldplay',7,8,6,3,'YykjpeuMNEk'],
+ ['Thunder','Imagine Dragons',8,7,7,1,'fKopy74weus'],['Radioactive','Imagine Dragons',8,3,6,1,'ktvTqknDobU'],
+ ['Firework','Katy Perry',8,8,7,1,'QGJuMBdaqIw'],['Uptown Funk','Mark Ronson (Bruno Mars)',9,9,8,1,'OPf0YbXqDm0'],['Just The Way You Are','Bruno Mars',6,9,5,4,'LjhCEhWiKXk'],
+ ["CAN'T STOP THE FEELING!",'Justin Timberlake',9,10,8,1,'ru0K8uYEZWw'],["Don't Start Now",'Dua Lipa',8,6,8,1,'oygrmJFKYZY'],['Watermelon Sugar','Harry Styles',7,8,6,3,'E07s5ZYygMg'],
+ ['What Was I Made For?','Billie Eilish',2,3,2,8,'cW8VLC9nnTo'],['Before You Go','Lewis Capaldi',4,2,4,6,'Jtauh8GcxBY'],
+ ['Hello','Adele',4,2,3,7,'YQHsXMglC9A'],['Rolling in the Deep','Adele',7,4,6,4,'rYEDA3JcQqw'],['Counting Stars','OneRepublic',7,6,7,4,'hT_nvWreIhg'],
+ ['Wake Me Up','Avicii',8,7,7,5,'IcrbM1l_BoI'],['The Nights','Avicii',8,8,8,3,'UtF6Jej8yb4'],['7 Years','Lukas Graham',4,4,5,6,'LHCob76kigA'],
+ ["Say You Won't Let Go",'James Arthur',4,7,4,8,'0yW7w8F2TVA'],['Dance Monkey','Tones And I',7,7,7,2,'q0hyYWKXF0Q'],['Blinding Lights','The Weeknd',9,6,9,0,'4NRXx6U8ABQ',1],
+ ['Let It Go','Frozen (Idina Menzel)',7,6,6,4,'L0MK7qz13bU'],["We Don't Talk About Bruno",'Encanto',6,6,6,4,'bvWRMAU6V-c'],["You're Welcome",'Moana (Dwayne Johnson)',8,9,7,4,'79DijItQXMM'],
+ ['Faded','Alan Walker',6,3,6,1,'60ItHLz5WEA'],['Beautiful Things','Benson Boone',6,4,5,5,'Oa_RSwwpPaA',1],
+ ['Unicorn','נועה קירל',8,6,7,1,'r4wbdKmM3bQ',1],['TOY','נטע',9,8,8,1,'CziHrYYSyPc'],
+ ['Die With A Smile','Lady Gaga & Bruno Mars',5,5,4,5,'kPa7bsKwL-c',1],['APT.','ROSÉ & Bruno Mars',9,9,9,1,'ekr2nIex040',1],
+ ['Ordinary','Alex Warren',6,5,5,5,'aoV9eVGhVoQ',1],['Golden','KPop Demon Hunters (HUNTR/X)',9,9,8,1,'yebNIHKAC4A',1],
+ ['WILDFLOWER','Billie Eilish',3,3,3,8,'O1PkZaFy61Y',1],['Man I Need','Olivia Dean',6,7,6,5,'fsGjRf-N71I',1],
+ ['New Day Will Rise','יובל רפאל',5,5,4,5,'Q3BELu4z6-U',1],['Hurricane','עדן גולן',4,3,4,6,'QV_NQ5F_iXY',1],
+ ['מה יהיה מחר','פאר טסי',6,6,6,4,'Iay1xdXljb4',1],['פרפרים','אודיה',4,6,4,7,'GmagbJ_bGZI',1],['מלכת הדור','עומר אדם',6,5,6,4,'fVMihvd4Xzs',1],
+ ['תמיד אוהב אותי','ששון שאולוב',7,8,6,4,'b_bqZTUQs5A',1],['אם את כבר הולכת','נדב חנציס',4,3,4,7,'_qpVvWIoGbc',1]
+];
+const $ = id => document.getElementById(id);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const load = (k,d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch(e) { return d; } };
+const save = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+const toSong = (r,i) => ({id:'r'+i,title:r[0],artist:r[1],e:r[2],h:r[3],t:r[4],a:r[5],yt:r[6],hot:!!r[7]});
+let mine = load('moodMine', []);
+var djReady = false;
+// פלייליסט לכל מצב רוח: 'mix' הוא הכללי, ושאר המפתחות הם מצבי הרוח
+let lists = load('moodLists', null) || {mix: load('moodPlaylist', [])};
+let active = load('moodActive', 'mix');
+if (!lists[active]) lists[active] = [];
+let playlist = lists[active];
+// תיקונים שלך למספרי האווירה גוברים על המספרים המקוריים
+let edits = load('moodEdits', {});
+const all = () => base.map(toSong).concat(mine).map(s => edits[s.id] ? {...s, ...edits[s.id]} : s);
+const byId = id => all().find(s => s.id === id);
+let mood = null, song = null, feedback = {};
+// לייקים נשמרים יחד עם מצב הרוח שבו נתת אותם, כדי שהאפליקציה תלמד ממך
+let likes = load('moodLikes', []);
+let disliked = load('moodDisliked', []);
+let diary = load('moodDiary', []);
+const dislikedSongs = () => disliked.map(byId).filter(Boolean);
+// עונש לשיר שדומה לשיר שלא אהבת: ככה גם "בני הדודים" שלו מופיעים פחות
+const penalty = s => dislikedSongs().some(d => dist(d, s) < 3) ? 1 : 0;
+
+// המרחק בין שתי "טביעות אצבע" של שירים
+const dist = (x,y) => Math.sqrt(F.reduce((sum,[k]) => sum + (x[k]-y[k])**2, 0));
+const matchPct = (x,y) => Math.max(0, Math.round(100 - dist(x,y)*6));
+
+// ההמלצות: הכי קרובים באווירה, בלי אותו אמן
+function similar(seed, n=5){
+  return all()
+    .filter(s => s.id !== seed.id && s.artist.trim() !== seed.artist.trim() && !disliked.includes(s.id))
+    .map(s => ({s, m: matchPct(seed, s), r: matchPct(seed, s) - penalty(s)*20}))
+    .sort((p,q) => q.r - p.r)
+    .slice(0, n);
+}
+// במצב "להחליף": מכוונים לחצי הדרך בין מצב הרוח עכשיו לבין המצב שרוצים להגיע אליו
+// הלמידה: מה שאת אוהבת בכל מצב רוח מזיז את "המטרה" של ההצעות לכיוון הטעם שלך
+function learnedSongs(k){
+  const ids = new Set(likes.filter(x => x.k === k).map(x => x.id).concat(lists[k] || []));
+  return [...ids].map(byId).filter(Boolean);
+}
+function learned(k){
+  const base = moods[k].v, songs = learnedSongs(k);
+  if (!songs.length) return base;
+  const w = songs.length / (songs.length + 3), t = {};
+  F.forEach(([f]) => t[f] = base[f] * (1 - w) + (songs.reduce((sum, s) => sum + s[f], 0) / songs.length) * w);
+  return t;
+}
+const target = () => {
+  const now = learned(mood); if (mode === 'match') return now;
+  const goal = learned(switchTo[mood]), t = {};
+  F.forEach(([k]) => t[k] = (now[k] + goal[k] * 2) / 3);
+  return t;
+};
+function songForMood(m, avoid){
+  m = {v: target()};
+  const close = all().filter(s => !disliked.includes(s.id)).map(s => ({s, d: dist(s, m.v) + penalty(s)*4})).sort((p,q) => p.d - q.d).slice(0, 5).map(x => x.s);
+  const opts = close.filter(s => s.id !== avoid);
+  return pick(opts.length ? opts : close);
+}
+
+$('chips').innerHTML = Object.entries(moods).map(([k,m]) => `<button class="chip" data-k="${k}" aria-pressed="false">${m.emo} ${m.name}</button>`).join('');
+$('sliders').innerHTML = F.map(([k,l]) => `<div><label for="s_${k}">${l}: <span id="o_${k}">5</span></label><input type="range" id="s_${k}" min="0" max="10" value="5"></div>`).join('');
+F.forEach(([k]) => $('s_'+k).addEventListener('input', e => $('o_'+k).textContent = e.target.value));
+
+const dark = () => document.documentElement.dataset.theme==='dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+function paint(m){
+  const r = document.documentElement.style, d = dark()?1:0;
+  r.setProperty('--main',m.main); r.setProperty('--deep',m.deep); r.setProperty('--bg',m.bg[d]); r.setProperty('--soft',m.soft[d]);
+  $('eL').setAttribute('ry',m.eyes); $('eR').setAttribute('ry',m.eyes);
+  $('bL').setAttribute('d',brows[m.brow][0]); $('bR').setAttribute('d',brows[m.brow][1]);
+  $('mo').setAttribute('d',m.mouth); $('mo').setAttribute('fill', m.mouth.endsWith('Z') ? '#1a1300' : 'none');
+}
+// כל השירים אמיתיים, אז אפשר לחפש אותם ביוטיוב
+const q = s => encodeURIComponent(s.title + ' ' + s.artist.replace(/\(.*?\)/g,''));
+const yt = s => s.yt ? `https://www.youtube.com/watch?v=${s.yt}` : `https://www.youtube.com/results?search_query=${q(s)}`;
+// מוציא את מספר הסרטון מקישור של יוטיוב
+const ytId = url => (String(url).match(/(?:v=|youtu\.be\/|shorts\/)([\w-]{11})/) || [])[1] || '';
+const sp = s => `https://open.spotify.com/search/${q(s)}`;
+const lk = 'display:inline-flex;align-items:center;text-decoration:none';
+const listen = (s, cls) => `<a class="${cls}" data-listen="${s.id}" style="${lk}" href="${yt(s)}" target="_blank" rel="noopener">▶️ יוטיוב</a><a class="${cls}" data-listen="${s.id}" style="${lk}" href="${sp(s)}" target="_blank" rel="noopener">🟢 ספוטיפיי</a>`;
+const replay = el => { el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); };
+// לבבות שעפים כשנותנים לייק
+function hearts(from){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r = from.getBoundingClientRect();
+  for (let i = 0; i < 7; i++) {
+    const h = document.createElement('span'); h.className = 'heart'; h.textContent = ['💖','💗','💕'][i % 3];
+    h.style.left = (r.left + r.width / 2 - 11) + 'px'; h.style.top = (r.top - 6) + 'px';
+    h.style.setProperty('--dx', (Math.random() * 120 - 60) + 'px'); h.style.setProperty('--r', (Math.random() * 60 - 30) + 'deg');
+    h.style.animationDelay = (i * 50) + 'ms';
+    document.body.appendChild(h); setTimeout(() => h.remove(), 1400);
+  }
+}
+const vibeBars = s => F.map(([k,l]) => `<div class="vb">${l} · ${s[k]}<div class="bar"><i style="width:${s[k]*10}%"></i></div></div>`).join('');
+
+function showSong(){
+  const m = moods[mood], f = feedback[song.id] || {};
+  $('res').classList.remove('empty'); replay($('res'));
+  const g = moods[switchTo[mood]];
+  $('res').innerHTML = `
+    <div class="acts" style="margin-bottom:16px">
+      <button class="btn ${mode==='match'?'on':''}" data-mode="match">🎯 שיר שמתאים למצב שלי</button>
+      <button class="btn ${mode==='switch'?'on':''}" data-mode="switch">🔄 עזרי לי להחליף מצב רוח</button>
+    </div>
+    <div class="song"><div class="cover">${mode==='match'?m.emo:g.emo}</div>
+      <div><div class="small">${mode==='match' ? `השיר שלך כשאת ${m.name}` : `מ${m.name} ← ל${g.name} ${g.emo}`}</div><div class="t">${esc(song.title)}</div><div class="a">${esc(song.artist)}</div></div></div>
+    <div class="vibes">${vibeBars(song)}</div>
+    <div class="acts">
+      <button class="btn ${f.like?'on':''}" data-act="like">${f.like?'❤️ אהבתי':'🤍 לייק'}</button>
+      <button class="btn ${f.done?'on':''}" data-act="done">✅ שמעתי עד הסוף</button>
+      <button class="btn" data-act="skip">⏭️ דלגי, שיר אחר</button>
+      <button class="btn" data-act="nope">👎 לא אהבתי</button>
+      ${listen(song, 'btn')}
+    </div>
+    <div class="row">
+      <div class="box"><b>📺 מה לראות (בלי קשר לשיר)</b>${m.show.map(x => `<p>• ${x}</p>`).join('')}
+        <b style="margin-top:10px">🎬 סרט לדוגמה</b>${movies[mood].map(x => `<p>🍿 ${x}</p>`).join('')}</div>
+      <div class="box"><b>💡 טיפ</b><p>${pick(m.tip)}</p></div>
+    </div>`;
+}
+let curRecs = [], recSeed = null;
+function showRecs(seed, scroll=true, why='אהבת'){
+  // מציעים רק שירים שעוד לא בפלייליסט, כדי שתמיד יהיו אפשרויות חדשות
+  recSeed = seed;
+  curRecs = similar(seed, 40).filter(x => !playlist.includes(x.s.id)).slice(0, 5);
+  $('recBand').hidden = false;
+  $('recWhy').textContent = `כי ${why} את "${seed.title}". אלה שירים עם אנרגיה ואווירה דומות, של זמרים אחרים.`;
+  renderRecs();
+  if (scroll) $('recBand').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+}
+function renderRecs(){
+  $('recs').innerHTML = curRecs.map(({s,m,from}, i) => `<li style="--i:${i}"><span class="match">${m}%</span><span class="grow"><b>${esc(s.title)}</b> · ${esc(s.artist)}${from ? `<br><span class="small">✨ חדש, דומה ל"${esc(from)}"</span>` : ''}</span>
+    ${listen(s,'mini')}<button class="mini" data-add="${s.id}">${playlist.includes(s.id)?'✓ בפלייליסט':'➕ הוסיפי'}</button></li>`).join('');
+}
+// אחרי הוספה: רק השיר שהוספת מתחלף בשיר חדש שדומה לו, ושאר ההצעות נשארות
+function replaceRec(id){
+  const i = curRecs.findIndex(x => x.s.id === id); if (i < 0) return;
+  const added = byId(id), shown = curRecs.map(x => x.s.id);
+  const next = similar(added, 60).find(x => !playlist.includes(x.s.id) && !shown.includes(x.s.id));
+  if (next) curRecs[i] = {s: next.s, m: next.m, from: added.title}; else curRecs.splice(i, 1);
+  renderRecs();
+}
+$('addAll').addEventListener('click', () => { curRecs.forEach(({s}) => { if (!playlist.includes(s.id)) playlist.push(s.id); }); savePl(); if (recSeed) showRecs(recSeed, false); });
+function savePl(){
+  playlist = playlist.filter(byId); lists[active] = playlist;
+  save('moodLists', lists); save('moodActive', active);
+  renderLists(); renderPl(); if (typeof renderDJ === 'function') renderDJ();
+  if (djReady) { if (djPos >= playlist.length) djPos = 0; updateDjPlay(); }
+  $('djWhich').textContent = `עורכים עכשיו את: ${listLabel(active)}`;
+}
+let listNames = load('moodListNames', {});
+const customKeys = () => Object.keys(listNames);
+const allListKeys = () => ['mix', ...Object.keys(moods), ...customKeys()];
+const listLabel = k => k === 'mix' ? '🎶 כללי' : listNames[k] ? `📁 ${listNames[k]}` : moods[k] ? `${moods[k].emo} ${moods[k].name}` : k;
+function setActive(k){
+  if (!lists[k]) lists[k] = [];
+  active = k; playlist = lists[k]; makeOrder(); savePl();
+  if (!$('recBand').hidden) renderRecs();
+}
+function renderLists(){
+  const keys = allListKeys();
+  $('delList').hidden = !listNames[active]; $('delList').textContent = '🗑️ מחקי את הפלייליסט הזה'; delArmed = false;
+  $('lists').innerHTML = keys.map(k => `<button data-list="${k}" aria-pressed="${k===active}">${listLabel(k)} · ${(lists[k]||[]).length}</button>`).join('');
+}
+let delArmed = false;
+$('newList').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('newListName').value.trim(); if (!name) return;
+  const k = 'c' + Date.now(); listNames[k] = name; save('moodListNames', listNames);
+  $('newListName').value = ''; setActive(k);
+});
+// מחיקה בשתי לחיצות, כדי שלא יימחק בטעות
+$('delList').addEventListener('click', () => {
+  if (!listNames[active]) return;
+  if (!delArmed) { delArmed = true; $('delList').textContent = '⚠️ בטוחה? לחצי שוב למחיקה'; return; }
+  delete listNames[active]; delete lists[active]; save('moodListNames', listNames);
+  active = 'mix'; playlist = lists.mix || (lists.mix = []); makeOrder(); savePl();
+});
+$('lists').addEventListener('click', e => { const b = e.target.closest('[data-list]'); if (b) setActive(b.dataset.list); });
+let order = [], pos = 0, shuffled = false;
+function makeOrder(){
+  order = playlist.slice();
+  if (shuffled) for (let i = order.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [order[i],order[j]] = [order[j],order[i]]; }
+  pos = 0; updatePlay();
+}
+function updatePlay(){
+  const s = byId(order[pos % (order.length||1)]);
+  $('plBar').style.display = playlist.length ? 'flex' : 'none';
+  $('plSearch').style.display = playlist.length > 3 ? 'block' : 'none';
+  if (!s) return;
+  $('playNext').href = yt(s);
+  $('playNext').textContent = pos === 0 ? '▶️ נגני את הפלייליסט' : '⏭️ השיר הבא';
+  $('nowPl').textContent = `הבא בתור: ${s.title} (${pos % order.length + 1} מתוך ${order.length})`;
+}
+$('playNext').addEventListener('click', () => { if (order.length) logListen(order[pos % order.length]); }); $('playNext').addEventListener('click', () => setTimeout(() => { pos++; updatePlay(); }, 50));
+$('shuf').addEventListener('click', () => { shuffled = !shuffled; $('shuf').setAttribute('aria-pressed', shuffled); $('shuf').classList.toggle('on', shuffled); makeOrder(); });
+$('plSearch').addEventListener('input', renderPl);
+// העברת שיר לפלייליסט של מצב רוח אחר: יוצא מהפלייליסט הזה ונכנס לשני
+$('pl').addEventListener('change', e => {
+  const sel = e.target.closest('[data-mv]'); if (!sel || !sel.value) return;
+  const id = sel.dataset.mv, to = sel.value, s = byId(id);
+  if (!lists[to]) lists[to] = [];
+  if (!lists[to].includes(id)) lists[to].push(id);
+  playlist = playlist.filter(x => x !== id); savePl();
+  $('moveMsg').textContent = `✅ "${s.title}" עבר ל${listLabel(to)}`;
+});
+function renderPl(){
+  const term = ($('plSearch').value || '').trim().toLowerCase();
+  if (order.length !== playlist.length || playlist.some(id => !order.includes(id))) makeOrder();
+  $('pl').innerHTML = playlist.map(byId).filter(Boolean).filter(s => !term || (s.title+' '+s.artist).toLowerCase().includes(term)).map((s,i) => `<li style="--i:${i}"><span class="match">${i+1}</span><span class="grow"><b>${esc(s.title)}</b> · ${esc(s.artist)}</span>${listen(s,'mini')}<select class="mv" data-mv="${s.id}" aria-label="העבירי את ${esc(s.title)} לפלייליסט אחר"><option value="">↪️ העבירי ל...</option>${allListKeys().filter(k => k !== active).map(k => `<option value="${k}">${listLabel(k)}</option>`).join('')}</select><button class="mini" data-rm="${s.id}">✕ הסירי</button></li>`).join('');
+  $('plEmpty').style.display = playlist.length ? 'none' : 'block';
+  // כל הפלייליסט ביוטיוב: יוטיוב יודע לבנות רשימת נגינה זמנית ממספרי הסרטונים
+  const songs = playlist.map(byId).filter(Boolean), vids = songs.map(s => s.yt).filter(Boolean);
+  $('plAll').style.display = songs.length ? 'flex' : 'none';
+  $('ytAll').style.display = vids.length ? '' : 'none';
+  $('ytAll').href = `https://www.youtube.com/watch_videos?video_ids=${vids.slice(0,50).join(',')}`;
+  $('ytAll').textContent = `📺 כל הפלייליסט ביוטיוב (${vids.length})`;
+  const missing = songs.length - vids.length;
+  $('copyMsg2').textContent = missing ? `${missing} שירים בלי קישור ליוטיוב לא ייכנסו. אפשר לשמוע אותם אחד אחד.` : '';
+}
+
+const dayKey = d => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+function selectMood(k){
+  mood = k; paint(moods[mood]); setActive(k); if (typeof renderLogos === 'function') renderLogos();
+  document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.k === mood));
+  song = songForMood(moods[mood]); showSong();
+  diary.push({k, d: dayKey(new Date())}); diary = diary.slice(-200); save('moodDiary', diary); renderWeek();
+}
+$('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) selectMood(b.dataset.k); });
+
+// היומן: 7 הימים האחרונים, ריבוע צבעוני לכל מצב רוח שבחרת
+function renderWeek(){
+  const days = [...Array(7)].map((_,i) => { const d = new Date(); d.setDate(d.getDate() - (6-i)); return d; });
+  $('week').innerHTML = days.map((d,i) => {
+    const list = diary.filter(x => x.d === dayKey(d) && moods[x.k]).slice(-6);
+    return `<div class="day ${i===6?'today':''}"><span class="lbl">${i===6?'היום':d.toLocaleDateString('he-IL',{weekday:'short'})}</span>
+      ${list.map(x => `<span class="dot" style="background:${moods[x.k].main}" title="${moods[x.k].name}">${moods[x.k].emo}</span>`).join('')}</div>`;
+  }).join('');
+  const inWeek = diary.filter(x => days.some(d => dayKey(d) === x.d) && moods[x.k]);
+  if (!inWeek.length) { $('weekSum').textContent = 'עוד אין רישומים. כל מצב רוח שתבחרי יופיע כאן.'; return; }
+  const count = {}; inWeek.forEach(x => count[x.k] = (count[x.k]||0) + 1);
+  const top = Object.entries(count).sort((a,b) => b[1]-a[1])[0][0];
+  $('weekSum').textContent = `השבוע הכי הרבה הרגשת ${moods[top].emo} ${moods[top].name} (${count[top]} פעמים).`;
+}
+
+// הניחוש: איזה מצב רוח הכי קרוב לאנרגיה ולשמחה שבחרת
+function guessMood(){
+  const e = +$('gE').value, h = +$('gH').value;
+  $('gEo').textContent = e; $('gHo').textContent = h;
+  return Object.entries(moods).map(([k,m]) => ({k, d: (m.v.e-e)**2 + (m.v.h-h)**2})).sort((a,b) => a.d - b.d)[0].k;
+}
+const showGuess = () => { const k = guessMood(); $('guess').textContent = `נראה לי שאת ${moods[k].emo} ${moods[k].name}`; $('guessGo').dataset.k = k; };
+['gE','gH'].forEach(id => $(id).addEventListener('input', showGuess));
+$('guessGo').addEventListener('click', () => { selectMood($('guessGo').dataset.k); $('res').scrollIntoView({block:'center'}); });
+showGuess(); renderWeek();
+// בפלייליסט רק Wait For It. השירים הדומים מוצגים כהצעה, ואת מחליטה אם להוסיף
+{
+  const wfi = byId('r0');
+  if (!load('moodSeeded3', false)) {
+    const auto = similar(wfi, 4).map(x => x.s.id);
+    playlist = playlist.filter(id => !auto.includes(id));
+    if (!playlist.includes(wfi.id)) playlist.unshift(wfi.id);
+    save('moodSeeded3', true); savePl();
+  }
+  showRecs(wfi, false);
+}
+
+// המשחק: כמה קרוב הניחוש שלך למספרים האמיתיים של השיר
+let gm = {round:1, score:0, song:null, checked:false, used:[]};
+let best = load('moodBest', 0);
+function newRound(){
+  const pool = all().filter(s => !gm.used.includes(s.id));
+  gm.song = pick(pool.length ? pool : all()); gm.used.push(gm.song.id); gm.checked = false;
+  $('gT').textContent = gm.song.title; $('gA').textContent = gm.song.artist;
+  $('qE').value = 5; $('qH').value = 5; $('qEo').textContent = 5; $('qHo').textContent = 5;
+  $('gOut').textContent = ''; $('gBtn').textContent = 'בדקי ניחוש';
+  $('gRound').textContent = `סיבוב ${gm.round} מתוך 5`; $('gScore').textContent = `⭐ ${gm.score} נקודות`;
+  $('gBest').textContent = best ? `🏆 השיא שלך: ${best} נקודות` : '';
+}
+['qE','qH'].forEach(id => $(id).addEventListener('input', e => $(id+'o').textContent = e.target.value));
+$('gBtn').addEventListener('click', () => {
+  if (gm.over) { gm = {round:1, score:0, song:null, checked:false, used:[]}; newRound(); return; }
+  if (!gm.checked) {
+    const e = +$('qE').value, h = +$('qH').value, s = gm.song;
+    const off = Math.abs(e - s.e) + Math.abs(h - s.h);
+    const pts = Math.max(0, 100 - off * 10);
+    gm.score += pts; gm.checked = true;
+    const word = pts >= 90 ? '🎯 מושלם!' : pts >= 70 ? '🔥 ממש קרוב!' : pts >= 40 ? '🙂 לא רע' : '😅 הפעם פספסת';
+    $('gOut').textContent = `${word} התשובה: אנרגיה ${s.e}, שמחה ${s.h}. קיבלת ${pts} נקודות.`;
+    $('gScore').textContent = `⭐ ${gm.score} נקודות`;
+    $('gBtn').textContent = gm.round < 5 ? 'לשיר הבא ←' : 'לסיכום 🏁';
+    return;
+  }
+  if (gm.round < 5) { gm.round++; newRound(); return; }
+  const record = gm.score > best;
+  if (record) { best = gm.score; save('moodBest', best); }
+  $('gOut').textContent = `🏁 סיימת עם ${gm.score} מתוך 500! ${record ? '🏆 שיא חדש!' : ''}`;
+  $('gBtn').textContent = '🔁 משחק חדש';
+  $('gBest').textContent = `🏆 השיא שלך: ${best} נקודות`;
+  gm.over = true;
+});
+newRound();
+
+// מצב דיג'יי: סדר, מעברים ושירים מגשרים
+const TR = [['fade','🌊 דעיכה הדרגתית'],['cut','✂️ חיתוך חד'],['drop','🚀 בנייה ודרופ'],['echo','🔁 אקו'],['slow','🐢 האטה']];
+let trans = load('moodTrans', {});
+const suggestTr = (a,b) => b.e - a.e >= 3 ? 'drop' : a.e - b.e >= 3 ? 'slow' : Math.abs(a.t-b.t) <= 1 ? 'fade' : 'echo';
+const linkColor = m => m >= 75 ? '#2e9e5b' : m >= 55 ? '#e0a100' : '#d93b3b';
+const linkWord = m => m >= 75 ? 'מעבר חלק' : m >= 55 ? 'מעבר בסדר' : 'קפיצה גדולה';
+function bridge(a,b){
+  return all().filter(x => !playlist.includes(x.id) && !disliked.includes(x.id))
+    .map(x => ({x, d: dist(a,x) + dist(x,b)})).sort((p,q) => p.d - q.d)[0]?.x;
+}
+function drawCurve(list){
+  const svg = $('curve'), W = svg.clientWidth || 600, H = svg.clientHeight || 150, p = 22;
+  if (list.length < 2) { svg.innerHTML = ''; return; }
+  const X = i => p + i * (W - 2*p) / (list.length - 1), Y = e => H - p - e * (H - 2*p) / 10;
+  const pts = list.map((s,i) => `${X(i)},${Y(s.e)}`).join(' ');
+  svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="var(--deep)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>` +
+    list.map((s,i) => `<circle cx="${X(i)}" cy="${Y(s.e)}" r="9" fill="var(--main)" stroke="var(--ink)" stroke-width="2"/><text x="${X(i)}" y="${Y(s.e)+4}" text-anchor="middle" font-size="11" font-weight="800" fill="#1a1300">${i+1}</text>`).join('');
+}
+function renderDJ(){
+  const list = playlist.map(byId).filter(Boolean);
+  $('djEmpty').style.display = list.length < 2 ? 'block' : 'none';
+  $('curveBox').style.display = list.length < 2 ? 'none' : '';
+  document.querySelector('#curveBox').previousElementSibling.style.display = list.length < 2 ? 'none' : '';
+  $('autoDJ').style.display = list.length < 3 ? 'none' : '';
+  drawCurve(list);
+  if (list.length < 2) { $('dj').innerHTML = ''; $('djScore').textContent = ''; return; }
+  let html = '', sum = 0;
+  list.forEach((s,i) => {
+    html += `<div class="djs"><span class="n">${i+1}</span><span class="grow"><b>${esc(s.title)}</b> · ${esc(s.artist)} <span class="small">⚡${s.e}</span></span>
+      ${listen(s,'mini')}
+      <button class="mini" data-up="${i}" aria-label="הזיזי למעלה" ${i===0?'disabled':''}>⬆️</button>
+      <button class="mini" data-down="${i}" aria-label="הזיזי למטה" ${i===list.length-1?'disabled':''}>⬇️</button></div>`;
+    const b = list[i+1]; if (!b) return;
+    const m = matchPct(s,b), key = s.id+'>'+b.id, cur = trans[key] || suggestTr(s,b); sum += m;
+    html += `<div class="link" style="--c:${linkColor(m)}"><span class="pill">🔗 ${m}% · ${linkWord(m)}</span>
+      <select data-tr="${key}" aria-label="סוג המעבר">${TR.map(([k,l]) => `<option value="${k}" ${k===cur?'selected':''}>${l}</option>`).join('')}</select>
+      ${m < 75 ? `<button class="mini" data-bridge="${i}">➕ שיר מגשר</button>` : ''}</div>`;
+  });
+  $('dj').innerHTML = html;
+  const avg = Math.round(sum / (list.length - 1));
+  $('djScore').textContent = `ציון הזרימה של הסט: ${avg}% ${avg >= 75 ? '🔥' : avg >= 55 ? '👍' : '🧩'}`;
+}
+$('dj').addEventListener('click', e => {
+  const up = e.target.closest('[data-up]'), dn = e.target.closest('[data-down]'), br = e.target.closest('[data-bridge]');
+  const swap = (i,j) => { [playlist[i],playlist[j]] = [playlist[j],playlist[i]]; savePl(); };
+  if (up) swap(+up.dataset.up, +up.dataset.up - 1);
+  if (dn) swap(+dn.dataset.down, +dn.dataset.down + 1);
+  if (br) {
+    const i = +br.dataset.bridge, list = playlist.map(byId).filter(Boolean), x = bridge(list[i], list[i+1]);
+    if (x) { playlist.splice(playlist.indexOf(list[i].id) + 1, 0, x.id); savePl(); }
+  }
+});
+$('dj').addEventListener('change', e => { const sel = e.target.closest('[data-tr]'); if (sel) { trans[sel.dataset.tr] = sel.value; save('moodTrans', trans); } });
+// סידור אוטומטי: מתחילים מהשיר הכי רגוע ובכל פעם עוברים לשיר הכי דומה שנשאר
+$('autoDJ').addEventListener('click', () => {
+  let left = playlist.map(byId).filter(Boolean); if (left.length < 3) return;
+  left.sort((a,b) => a.e - b.e);
+  const out = [left.shift()];
+  while (left.length) { const last = out[out.length-1]; left.sort((a,b) => dist(last,a) - dist(last,b)); out.push(left.shift()); }
+  playlist = out.map(s => s.id); savePl();
+});
+const curveRO = new ResizeObserver(() => drawCurve(playlist.map(byId).filter(Boolean))); curveRO.observe($('curveBox'));
+renderDJ();
+
+// כל השירים: חיפוש, הוספה לפלייליסט ותיקון המספרים
+let editing = null;
+function renderAll(){
+  const term = $('allSearch').value.trim().toLowerCase(), by = $('allSort').value;
+  const songs = all().filter(s => !term || (s.title + ' ' + s.artist).toLowerCase().includes(term))
+    .sort((a,b) => by === 'title' ? a.title.localeCompare(b.title) : by === 'hot' ? (b.hot - a.hot) || a.title.localeCompare(b.title) : b[by] - a[by]);
+  const opts = allListKeys().map(k => `<option value="${k}">${listLabel(k)}</option>`).join('');
+  $('allList').innerHTML = songs.map(s => `<li><span class="grow">${s.hot ? '🔥 ' : ''}<b>${esc(s.title)}</b> · ${esc(s.artist)}<br>
+      <span class="small">⚡${s.e} 😊${s.h} 🏃${s.t} 🎸${s.a}${edits[s.id] ? ' · ✏️ תוקן על ידך' : ''}</span></span>
+      ${listen(s,'mini')}
+      <select class="mv" data-addto="${s.id}" aria-label="הוסיפי את ${esc(s.title)} לפלייליסט"><option value="">➕ הוסיפי ל...</option>${opts}</select>
+      <button class="mini" data-edit="${s.id}" aria-expanded="${editing === s.id}">✏️ ערכי</button>
+      ${editing === s.id ? `<div class="edit">${F.map(([k,l]) => `<label>${l}: <b id="ev_${k}">${s[k]}</b><input type="range" min="0" max="10" value="${s[k]}" data-ek="${k}"></label>`).join('')}
+        <div class="acts"><button class="btn solid" data-esave="${s.id}">שמרי</button>${edits[s.id] ? `<button class="btn" data-ereset="${s.id}">↩️ חזרה למקור</button>` : ''}</div></div>` : ''}
+    </li>`).join('') || `<li>לא מצאתי את "${esc($('allSearch').value)}" <button class="btn solid" id="addMissing">➕ הוסיפי אותו</button></li>`;
+}
+$('allSearch').addEventListener('input', renderAll);
+$('allList').addEventListener('click', e => {
+  if (!e.target.closest('#addMissing')) return;
+  $('addBox').open = true; $('fT').value = $('allSearch').value.trim(); $('fA').focus();
+  $('addBox').scrollIntoView({block:'start'});
+});
+$('allSort').addEventListener('change', renderAll);
+$('allList').addEventListener('input', e => { const r = e.target.closest('[data-ek]'); if (r) $('ev_' + r.dataset.ek).textContent = r.value; });
+$('allList').addEventListener('change', e => {
+  const sel = e.target.closest('[data-addto]'); if (!sel || !sel.value) return;
+  const id = sel.dataset.addto, to = sel.value;
+  if (!lists[to]) lists[to] = [];
+  if (!lists[to].includes(id)) lists[to].push(id);
+  if (to === active) playlist = lists[to];
+  savePl(); $('allMsg').textContent = `✅ "${byId(id).title}" נוסף ל${listLabel(to)}`; sel.value = '';
+});
+$('allList').addEventListener('click', e => {
+  const ed = e.target.closest('[data-edit]'), sv = e.target.closest('[data-esave]'), rs = e.target.closest('[data-ereset]');
+  if (ed) { editing = editing === ed.dataset.edit ? null : ed.dataset.edit; renderAll(); }
+  if (sv) {
+    const row = sv.closest('li'), v = {};
+    row.querySelectorAll('[data-ek]').forEach(r => v[r.dataset.ek] = +r.value);
+    edits[sv.dataset.esave] = v; save('moodEdits', edits); editing = null;
+    $('allMsg').textContent = '✅ נשמר! ההמלצות יתחשבו במספרים החדשים.'; renderAll(); renderDJ();
+  }
+  if (rs) { delete edits[rs.dataset.ereset]; save('moodEdits', edits); editing = null; renderAll(); renderDJ(); }
+});
+
+// הסטטיסטיקה שלי
+function hbars(rows){
+  const max = Math.max(1, ...rows.map(r => r[1]));
+  return rows.map(([label, n, color]) => `<div class="hrow"><div>${label}<div class="bar"><i style="width:${n / max * 100}%;${color ? 'background:' + color : ''}"></i></div></div><b style="text-align:end">${n}</b></div>`).join('');
+}
+function renderStats(){
+  const plays = {}; listens.forEach(x => plays[x.id] = (plays[x.id] || 0) + 1);
+  const topSongs = Object.entries(plays).map(([id,n]) => [byId(id), n]).filter(x => x[0]).sort((a,b) => b[1] - a[1]).slice(0, 5);
+  const artists = {}; listens.forEach(x => { const s = byId(x.id); if (s) { const a = singer(s.artist); artists[a] = (artists[a] || 0) + 1; } });
+  const topArtist = Object.entries(artists).sort((a,b) => b[1] - a[1])[0];
+  const now = new Date(), month = diary.filter(x => { const [y,m] = x.d.split('-').map(Number); return y === now.getFullYear() && m === now.getMonth() + 1 && moods[x.k]; });
+  const mc = {}; month.forEach(x => mc[x.k] = (mc[x.k] || 0) + 1);
+  const inLists = new Set(Object.values(lists).flat()).size;
+  $('statNums').innerHTML = [
+    [listens.length, 'האזנות דרך האפליקציה'],
+    [likes.length, 'לייקים ❤️'],
+    [inLists, 'שירים בפלייליסטים'],
+    [topArtist ? esc(topArtist[0]) : '–', 'הזמר שהכי שמעת']
+  ].map(([n,l]) => `<div class="stat"><b style="${String(n).length > 6 ? 'font-size:18px' : ''}">${n}</b><span>${l}</span></div>`).join('');
+  $('statSongs').innerHTML = topSongs.length ? hbars(topSongs.map(([s,n]) => [`${esc(s.title)} <span class="small">· ${esc(singer(s.artist))}</span>`, n])) : '<p class="small">עוד לא שמעת שירים דרך האפליקציה. לחצי ▶️ או 🟢 ליד שיר.</p>';
+  $('statMoods').innerHTML = month.length ? hbars(Object.entries(mc).sort((a,b) => b[1] - a[1]).map(([k,n]) => [`${moods[k].emo} ${moods[k].name}`, n, moods[k].main])) : '<p class="small">עוד לא בחרת מצב רוח החודש.</p>';
+  const learnedRows = Object.keys(moods).map(k => [k, learnedSongs(k).length]).filter(x => x[1]);
+  $('statLearn').innerHTML = learnedRows.length ? learnedRows.map(([k,n]) => {
+    const L = learned(k), d = moods[k].v;
+    const diffs = F.filter(([f]) => Math.abs(L[f] - d[f]) >= 0.5).map(([f,l]) => `${l} ${L[f] > d[f] ? 'יותר' : 'פחות'}`);
+    return `<p style="margin:6px 0">${moods[k].emo} <b>${moods[k].name}</b> · למדה מ-${n} שירים${diffs.length ? `: את אוהבת ${diffs.join(', ')}` : ': הטעם שלך דומה לברירת המחדל'}</p>`;
+  }).join('') : '<p class="small">עוד אין מספיק מידע. תני ❤️ לשירים שאת אוהבת, והאפליקציה תתחיל ללמוד.</p>';
+}
+
+// האזנות: כל שיר שפתחת דרך האפליקציה נרשם, ולפי השעתיים האחרונות מנחשים את מצב הרוח
+let listens = load('moodListens', []);
+function logListen(id){
+  listens.push({id, t: Date.now()});
+  listens = listens.filter(x => Date.now() - x.t < 60 * 864e5).slice(-3000);
+  save('moodListens', listens); renderListenHint(); renderStats();
+}
+function renderListenHint(){
+  const recent = listens.filter(x => Date.now() - x.t < 2 * 36e5).map(x => byId(x.id)).filter(Boolean);
+  const box = $('listenHint');
+  if (!recent.length) { box.hidden = true; return; }
+  const avg = {}; F.forEach(([k]) => avg[k] = recent.reduce((sum, s) => sum + s[k], 0) / recent.length);
+  const k = Object.entries(moods).map(([k,m]) => ({k, d: dist(avg, m.v)})).sort((a,b) => a.d - b.d)[0].k;
+  box.hidden = false;
+  box.innerHTML = `<b class="small">🧠 לפי ${recent.length === 1 ? 'שיר אחד ששמעת' : recent.length + ' שירים ששמעת'} בשעתיים האחרונות</b>
+    <p>נראה שאת ${moods[k].emo} ${moods[k].name}</p>
+    <button class="btn solid" data-hint="${k}">🎵 תני לי שיר שמתאים לי עכשיו</button>`;
+}
+$('listenHint').addEventListener('click', e => { const b = e.target.closest('[data-hint]'); if (b) selectMood(b.dataset.hint); });
+const listenTimer = setInterval(renderListenHint, 60000);
+renderListenHint();
+
+// העתקת הפלייליסט לפי הסדר של הדיג'יי
+const singer = a => (a.match(/\(([^)]+)\)/) || [0, a])[1];
+const doCopy = async (msg, box) => {
+  const text = playlist.map(byId).filter(Boolean).map((s,i) => `${i+1}. ${s.title} - ${singer(s.artist)}`).join('\n');
+  if (!text) { $(msg).textContent = 'הפלייליסט ריק, אין מה להעתיק.'; return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    $(box).hidden = true;
+    $(msg).textContent = '✅ הרשימה הועתקה! אפשר להדביק אותה בוואטסאפ, בפתקים, או באתר שהופך רשימה לפלייליסט בספוטיפיי.';
+  } catch (err) {
+    $(box).hidden = false; $(box).value = text; $(box).select();
+    $(msg).textContent = 'לא הצלחתי להעתיק לבד. הרשימה מסומנת למטה, אפשר להעתיק אותה ידנית.';
+  }
+};
+$('copyList').addEventListener('click', () => doCopy('copyMsg', 'copyBox'));
+$('copyList2').addEventListener('click', () => doCopy('copyMsg2', 'copyBox2'));
+// נגינת הסט לפי הסדר: כל לחיצה פותחת את השיר הבא ביוטיוב
+let djPos = 0; djReady = true;
+function updateDjPlay(){
+  const list = playlist.map(byId).filter(Boolean), b = $('djPlay');
+  b.style.display = list.length ? '' : 'none'; if (!list.length) { $('djYtAll').style.display = 'none'; return; }
+  const s = list[djPos % list.length];
+  // כל הסט ביוטיוב, לפי הסדר שקבעת במצב דיג'יי
+  const vids = list.map(x => x.yt).filter(Boolean);
+  $('djYtAll').style.display = vids.length ? '' : 'none';
+  $('djYtAll').href = `https://www.youtube.com/watch_videos?video_ids=${vids.slice(0,50).join(',')}`;
+  $('djYtAll').textContent = `📺 כל הסט ביוטיוב (${vids.length})`;
+  b.href = yt(s);
+  b.textContent = djPos === 0 ? `▶️ נגני את הסט (${s.title})` : `⏭️ הבא בסט: ${s.title} (${djPos % list.length + 1}/${list.length})`;
+}
+$('djPlay').addEventListener('click', () => { const list = playlist.map(byId).filter(Boolean); if (list.length) logListen(list[djPos % list.length].id); setTimeout(() => { djPos++; updateDjPlay(); }, 50); });
+const djObs = new MutationObserver(() => { if (djPos >= playlist.length) djPos = 0; updateDjPlay(); }); djObs.observe($('dj'), {childList:true});
+updateDjPlay();
+renderLists(); $('djWhich').textContent = `עורכים עכשיו את: ${listLabel(active)}`;
+
+// לוגואים: כל אחד הוא ציור SVG קטן שמשתמש בצבעים של מצב הרוח
+// הסמיילי של מצב הרוח: אותו פרצוף כמו על התקליט, משתנה לפי מצב הרוח
+const faceSVG = () => {
+  const m = mood ? moods[mood] : {eyes:15, brow:'flat', mouth:'M155 228 Q200 285 245 228'};
+  const b = brows[m.brow], fill = m.mouth.endsWith('Z') ? '#1a1300' : 'none';
+  return `<svg viewBox="20 20 360 360"><circle cx="200" cy="200" r="170" fill="var(--main)" stroke="var(--ink)" stroke-width="10"/>
+    <ellipse cx="165" cy="180" rx="11" ry="${m.eyes}" fill="#1a1300"/><ellipse cx="235" cy="180" rx="11" ry="${m.eyes}" fill="#1a1300"/>
+    <path d="${b[0]}" stroke="#1a1300" stroke-width="7" stroke-linecap="round" fill="none"/><path d="${b[1]}" stroke="#1a1300" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="${m.mouth}" stroke="#1a1300" stroke-width="9" stroke-linecap="round" fill="${fill}"/>
+    <circle cx="140" cy="225" r="14" fill="#ff7aa8" opacity=".45"/><circle cx="260" cy="225" r="14" fill="#ff7aa8" opacity=".45"/></svg>`;
+};
+const LOGOS = {
+  face:['סמיילי מצב רוח', ''],
+  vinyl:['תקליט',`<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#151515"/><circle cx="32" cy="32" r="22" fill="none" stroke="#333" stroke-width="2"/><circle cx="32" cy="32" r="13" fill="var(--main)"/><circle cx="27" cy="29" r="1.8" fill="#1a1300"/><circle cx="37" cy="29" r="1.8" fill="#1a1300"/><path d="M26 35 Q32 40 38 35" stroke="#1a1300" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`],
+  eq:['גלי סאונד',`<svg viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="18" fill="var(--ink)"/>${[0,1,2,3,4].map(i => `<rect class="eqb" style="animation-delay:${i*.18}s" x="${11+i*9}" y="${[26,16,10,20,28][i]}" width="6" height="${[26,36,42,32,24][i]}" rx="3" fill="var(--main)"/>`).join('')}</svg>`],
+  heart:['לב ותו',`<svg viewBox="0 0 64 64"><path d="M32 56 C10 42 4 30 8 20 C12 10 26 8 32 20 C38 8 52 10 56 20 C60 30 54 42 32 56Z" fill="var(--main)" stroke="var(--ink)" stroke-width="3"/><path d="M36 22 V38" stroke="#1a1300" stroke-width="3" stroke-linecap="round"/><path d="M36 22 L44 25" stroke="#1a1300" stroke-width="3" stroke-linecap="round"/><ellipse cx="32" cy="39" rx="5" ry="4" fill="#1a1300"/></svg>`],
+  cassette:['קסטה',`<svg viewBox="0 0 64 64"><rect x="4" y="12" width="56" height="40" rx="7" fill="var(--main)" stroke="var(--ink)" stroke-width="3"/><rect x="12" y="19" width="40" height="18" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/><circle cx="22" cy="28" r="5" fill="none" stroke="var(--ink)" stroke-width="3"/><circle cx="42" cy="28" r="5" fill="none" stroke="var(--ink)" stroke-width="3"/><path d="M16 52 L20 43 H44 L48 52" fill="none" stroke="var(--ink)" stroke-width="3"/></svg>`],
+  phones:['אוזניות',`<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="var(--main)"/><path d="M14 38 V32 A18 18 0 0 1 50 32 V38" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><rect x="10" y="34" width="10" height="16" rx="5" fill="var(--ink)"/><rect x="44" y="34" width="10" height="16" rx="5" fill="var(--ink)"/><path d="M27 34 Q32 38 37 34" stroke="var(--ink)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`],
+  moon:['ירח מנגן',`<svg viewBox="0 0 64 64"><path d="M40 6 A26 26 0 1 0 58 40 A20 20 0 1 1 40 6Z" fill="var(--main)" stroke="var(--ink)" stroke-width="3"/><path d="M44 14 V30 M52 12 V28 M44 14 L52 12" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" fill="none"/><circle cx="41" cy="31" r="3.5" fill="var(--ink)"/><circle cx="49" cy="29" r="3.5" fill="var(--ink)"/></svg>`]
+};
+let logo = load('moodLogo', 'face');
+// הסמיילי הוא הלוגו הראשי
+if (!load('moodLogoFace2', false)) { logo = 'face'; save('moodLogo', logo); save('moodLogoFace2', true); }
+if (!LOGOS[logo]) logo = 'face';
+function renderLogos(){
+  LOGOS.face[1] = faceSVG();
+  $('logo').innerHTML = LOGOS[logo][1];
+  $('logos').innerHTML = Object.entries(LOGOS).map(([k,[n,svg]]) => `<button data-logo="${k}" aria-pressed="${k===logo}">${svg}${n}</button>`).join('');
+}
+$('logos').addEventListener('click', e => { const b = e.target.closest('[data-logo]'); if (!b) return; logo = b.dataset.logo; save('moodLogo', logo); renderLogos(); });
+renderLogos();
+
+// התפריט: מציג רק את החלק שבחרת
+const TABS = ['mood','playlist','songs','dj','game','diary','more'];
+function go(t, push){
+  if (!TABS.includes(t)) t = 'mood';
+  document.querySelectorAll('[data-tab]').forEach(b => { b.classList.toggle('off', b.dataset.tab !== t); if (b.dataset.tab === t) replay(b); });
+  document.querySelectorAll('[data-go]').forEach(b => b.toggleAttribute('aria-current', b.dataset.go === t));
+  document.querySelectorAll('[data-go][aria-current]').forEach(b => b.setAttribute('aria-current','page'));
+  if (push && location.hash !== '#'+t) { try { history.replaceState(null,'','#'+t); } catch(e) {} }
+  window.scrollTo(0,0);
+  if (t === 'dj') drawCurve(playlist.map(byId).filter(Boolean));
+  if (t === 'songs') renderAll();
+  if (t === 'diary') renderStats();
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go, true); });
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+go(location.hash.slice(1));
+
+$('res').addEventListener('click', e => {
+  const md = e.target.closest('[data-mode]');
+  if (md && mood) { mode = md.dataset.mode; song = songForMood(moods[mood]); showSong(); return; }
+  const b = e.target.closest('[data-act]'); if (!b || !song) return;
+  const act = b.dataset.act, f = feedback[song.id] = feedback[song.id] || {like: likes.some(x => x.id === song.id && x.k === mood)};
+  if (act === 'skip') { song = songForMood(moods[mood], song.id); showSong(); return; }
+  if (act === 'nope') {
+    if (!disliked.includes(song.id)) disliked.push(song.id);
+    save('moodDisliked', disliked);
+    playlist = playlist.filter(id => id !== song.id); savePl();
+    song = songForMood(moods[mood], song.id); showSong(); return;
+  }
+  f[act] = !f[act];
+  if (act === 'like' && !f.like) hearts(b);
+  if (act === 'like') {
+    likes = likes.filter(x => !(x.id === song.id && x.k === mood));
+    if (f.like) likes.push({id: song.id, k: mood, t: Date.now()});
+    save('moodLikes', likes); renderStats();
+  }
+  if (act === 'like' && f.like && !playlist.includes(song.id)) { playlist.push(song.id); savePl(); }
+  showSong();
+  if (f[act]) showRecs(song);
+});
+document.body.addEventListener('click', e => {
+  const a = e.target.closest('[data-add]'), r = e.target.closest('[data-rm]'), l = e.target.closest('[data-listen]');
+  if (l) logListen(l.dataset.listen);
+  if (a && !playlist.includes(a.dataset.add)) {
+    playlist.push(a.dataset.add); savePl();
+    replaceRec(a.dataset.add);
+  }
+  if (r) { playlist = playlist.filter(id => id !== r.dataset.rm); savePl(); }
+});
+let fMood = null;
+$('fMood').innerHTML = Object.entries(moods).map(([k,m]) => `<button type="button" data-fm="${k}" aria-pressed="false">${m.emo} ${m.name}</button>`).join('');
+$('fMood').addEventListener('click', e => {
+  const b = e.target.closest('[data-fm]'); if (!b) return;
+  fMood = b.dataset.fm;
+  $('fMood').querySelectorAll('[data-fm]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  F.forEach(([k]) => { const v = Math.round(moods[fMood].v[k]); $('s_'+k).value = v; $('o_'+k).textContent = v; });
+});
+$('addForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const s = {id:'m'+Date.now(), title:$('fT').value.trim(), artist:$('fA').value.trim()};
+  if (!s.title || !s.artist) return;
+  F.forEach(([k]) => s[k] = +$('s_'+k).value);
+  const vid = ytId($('fY').value); if (vid) s.yt = vid;
+  mine.push(s); save('moodMine', mine);
+  if (fMood) { if (!lists[fMood]) lists[fMood] = []; lists[fMood].push(s.id); if (fMood === active) playlist = lists[fMood]; savePl(); }
+  $('added').textContent = `✅ "${s.title}" נשמר${fMood ? ` ונכנס לפלייליסט ${listLabel(fMood)}` : ''}! עכשיו הוא יכול להופיע בהמלצות.`;
+  e.target.reset(); F.forEach(([k]) => $('o_'+k).textContent = 5);
+  fMood = null; $('fMood').querySelectorAll('[data-fm]').forEach(x => x.setAttribute('aria-pressed', 'false'));
+  renderAll();
+});
+renderPl();
+
+// אמנים: מקבצים את כל השירים לפי הזמר. שיר של שניים (עם &) מופיע אצל שניהם
+let view = 'songs', openArtist = null;
+const AV = ['#ffd970','#b3cdff','#d9cfff','#ffb49c','#ffc8de','#a8e6cc','#ffbdd6','#ffaaaa','#ddcdc5','#c3cbf3','#ffd394'];
+const artistNames = s => s.artist.split(' & ').map(a => singer(a.trim()).trim());
+function artistMap(){
+  const m = {};
+  all().forEach(s => artistNames(s).forEach(a => (m[a] = m[a] || []).push(s)));
+  return m;
+}
+const avColor = name => AV[[...name].reduce((h,c) => h + c.charCodeAt(0), 0) % AV.length];
+function renderArtists(){
+  const term = $('allSearch').value.trim().toLowerCase(), m = artistMap();
+  if (openArtist && m[openArtist]) {
+    const songs = m[openArtist], vids = songs.map(s => s.yt).filter(Boolean);
+    const opts = allListKeys().map(k => `<option value="${k}">${listLabel(k)}</option>`).join('');
+    $('artistGrid').hidden = true; $('artistPage').hidden = false;
+    $('artistPage').innerHTML = `<button class="btn" id="backArtists" style="margin-bottom:14px">→ כל האמנים</button>
+      <div class="ahead"><div class="avatar" style="background:${avColor(openArtist)}">${esc([...openArtist][0])}</div>
+        <div><h2 style="margin:0">${esc(openArtist)}</h2><p class="small" style="margin:4px 0 10px">${songs.length} שירים באפליקציה</p>
+        <div class="acts">${vids.length ? `<a class="btn solid" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="https://www.youtube.com/watch_videos?video_ids=${vids.join(',')}">📺 השירים מכאן ביוטיוב</a>` : ''}</div></div></div>
+      <div class="card" style="box-shadow:none;margin:0 0 14px;padding:16px">
+        <b>🌍 רוצה את כל השירים של ${esc(openArtist)}?</b>
+        <p class="small" style="margin:4px 0 10px">באפליקציה יש רק חלק מהשירים. הכפתורים פותחים את כל השירים שלו ביוטיוב או בספוטיפיי.</p>
+        <div class="acts">
+          <a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(openArtist + ' songs')}">▶️ כל השירים ביוטיוב</a>
+          <a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="https://open.spotify.com/search/${encodeURIComponent(openArtist)}/artists">🟢 העמוד שלו בספוטיפיי</a>
+        </div>
+        <p class="small" style="margin:10px 0 0">מצאת שם שיר שאת אוהבת? הוסיפי אותו בלשונית 🎵 שירים ← "הוסיפי אותו".</p>
+      </div>
+      <ul class="list">${songs.map((s,i) => `<li style="--i:${i}"><span class="grow">${s.hot ? '🔥 ' : ''}<b>${esc(s.title)}</b><br><span class="small">⚡${s.e} 😊${s.h} 🏃${s.t} 🎸${s.a}</span></span>
+        ${listen(s,'mini')}<select class="mv" data-addto="${s.id}" aria-label="הוסיפי את ${esc(s.title)} לפלייליסט"><option value="">➕ הוסיפי ל...</option>${opts}</select></li>`).join('')}</ul>`;
+    return;
+  }
+  $('artistGrid').hidden = false; $('artistPage').hidden = true;
+  const list = Object.entries(m).filter(([a]) => !term || a.toLowerCase().includes(term))
+    .sort((x,y) => y[1].length - x[1].length || x[0].localeCompare(y[0]));
+  $('artistGrid').innerHTML = list.map(([a,songs], i) => `<button class="artist" data-artist="${esc(a)}" style="--i:${Math.min(i,20)}">
+      <span class="avatar" style="background:${avColor(a)}">${esc([...a][0])}</span><b>${esc(a)}</b><span>${songs.length} ${songs.length === 1 ? 'שיר' : 'שירים'}${songs.some(s => s.hot) ? ' · 🔥' : ''}</span></button>`).join('')
+    || `<p>לא מצאתי אמן בשם "${esc($('allSearch').value)}".</p>`;
+}
+function setView(v){
+  view = v; openArtist = null;
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-selected', b.dataset.view === v));
+  $('allList').hidden = v !== 'songs'; $('allSort').parentElement.hidden = v !== 'songs'; $('artistView').hidden = v !== 'artists';
+  $('allSearch').placeholder = v === 'songs' ? '🔍 חיפוש שיר או זמר' : '🔍 חיפוש אמן';
+  v === 'songs' ? renderAll() : renderArtists();
+}
+document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view); });
+$('artistGrid').addEventListener('click', e => { const b = e.target.closest('[data-artist]'); if (b) { openArtist = b.dataset.artist; renderArtists(); window.scrollTo(0,0); } });
+$('artistPage').addEventListener('click', e => { if (e.target.closest('#backArtists')) { openArtist = null; renderArtists(); } });
+$('artistPage').addEventListener('change', e => {
+  const sel = e.target.closest('[data-addto]'); if (!sel || !sel.value) return;
+  const id = sel.dataset.addto, to = sel.value;
+  if (!lists[to]) lists[to] = [];
+  if (!lists[to].includes(id)) lists[to].push(id);
+  if (to === active) playlist = lists[to];
+  savePl(); sel.outerHTML = `<span class="small" style="font-weight:600">✅ נוסף ל${listLabel(to)}</span>`;
+});
+$('allSearch').addEventListener('input', () => { if (view === 'artists') { openArtist = null; renderArtists(); } });
+
+// גיבוי: אורזים את כל המידע של האפליקציה לקוד אחד שאפשר להעתיק ולהדביק במכשיר אחר
+function backupCode(){
+  const data = {};
+  try { Object.keys(localStorage).filter(k => k.startsWith('mood')).forEach(k => data[k] = localStorage.getItem(k)); } catch (e) {}
+  return 'MOOD1:' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+}
+$('bkCopy').addEventListener('click', async () => {
+  const code = backupCode();
+  try { await navigator.clipboard.writeText(code); $('bkMsg').textContent = '✅ הקוד הועתק! שלחי אותו לעצמך והדביקי במכשיר החדש.'; }
+  catch (e) { $('bkIn').value = code; $('bkIn').select(); $('bkMsg').textContent = 'הקוד מסומן בתיבה למטה. העתיקי אותו ידנית.'; }
+});
+let bkArmed = false;
+$('bkLoad').addEventListener('click', () => {
+  const raw = $('bkIn').value.trim();
+  if (!raw.startsWith('MOOD1:')) { $('bkLoadMsg').textContent = 'זה לא נראה כמו קוד גיבוי של מצב רוח. בדקי שהעתקת את כולו.'; return; }
+  let data; try { data = JSON.parse(decodeURIComponent(escape(atob(raw.slice(6))))); } catch (e) { $('bkLoadMsg').textContent = 'הקוד פגום. נסי להעתיק אותו שוב.'; return; }
+  if (!bkArmed) { bkArmed = true; $('bkLoad').textContent = '⚠️ בטוחה? זה יחליף את מה שיש כאן. לחצי שוב'; return; }
+  try { Object.entries(data).forEach(([k,v]) => { if (k.startsWith('mood')) localStorage.setItem(k, v); }); } catch (e) { $('bkLoadMsg').textContent = 'לא הצלחתי לשמור במכשיר הזה.'; return; }
+  $('bkLoadMsg').textContent = '✅ שוחזר! האפליקציה נטענת מחדש...'; setTimeout(() => location.reload(), 900);
+});
+$('bkIn').addEventListener('input', () => { bkArmed = false; $('bkLoad').textContent = '⬇️ שחזרי מהקוד'; $('bkLoadMsg').textContent = ''; });
+renderAll(); renderStats();
+}
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+</script>
+</body>
+</html>
