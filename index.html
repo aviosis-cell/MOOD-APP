@@ -206,6 +206,12 @@ h1{font-size:clamp(30px,5vw,44px)}
 .sharebox input{margin-top:6px}
 .friend{border-radius:26px;padding:18px;margin-top:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--fc) 45%,var(--card)),var(--card));border:1.5px solid var(--line);box-shadow:var(--lift);animation:rise .6s cubic-bezier(.2,.9,.3,1) both}
 .friend .big{font-size:22px;font-weight:800;line-height:1.3;margin:4px 0 10px}
+
+.fchk{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.fchk label{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font-size:15px;font-weight:400;cursor:pointer}
+.fchk input{width:18px;height:18px;accent-color:var(--deep)}
+.fmood{font-size:17px;font-weight:600}
+@media(max-width:600px){.tabs button{font-size:10.5px}}
 </style>
 </head>
 <body>
@@ -214,9 +220,9 @@ h1{font-size:clamp(30px,5vw,44px)}
   <button data-go="mood" aria-current="page"><span>🎧</span>מצב רוח</button>
   <button data-go="playlist"><span>🎶</span>פלייליסט</button>
   <button data-go="songs"><span>🔍</span>שירים</button>
+  <button data-go="friends"><span>👯</span>חברים</button>
   <button data-go="dj"><span>🎛️</span>דיג'יי</button>
   <button data-go="game"><span>🎮</span>משחק</button>
-  <button data-go="diary"><span>📅</span>יומן</button>
   <button data-go="more"><span>➕</span>עוד</button>
 </nav>
 <div data-tab="mood" class="band">
@@ -297,6 +303,52 @@ h1{font-size:clamp(30px,5vw,44px)}
   <p class="small" id="moveMsg" aria-live="polite" style="margin:0 0 8px;font-weight:600"></p>
   <ul class="list" id="pl"></ul>
   <p class="small" id="plEmpty">הפלייליסט הזה עוד ריק. בחרי מצב רוח, תני לייק לשיר או הוסיפי מההצעות.</p>
+</div>
+
+<div data-tab="friends" class="band">
+  <h2>👯 חברים</h2>
+  <div id="fbOut">
+    <p class="small" id="fbStatus">טוען...</p>
+    <div class="card" id="authBox" hidden style="box-shadow:none">
+      <div class="seg" role="tablist" aria-label="כניסה או הרשמה">
+        <button role="tab" data-auth="login" aria-selected="true">כניסה</button>
+        <button role="tab" data-auth="signup" aria-selected="false">הרשמה</button>
+      </div>
+      <form id="authForm" style="display:grid;gap:10px">
+        <div><label for="auUser">שם משתמש (אותיות באנגלית, מספרים ו-_)</label><input type="text" id="auUser" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="15" required></div>
+        <div id="auNameRow" hidden><label for="auName">השם שהחברים יראו</label><input type="text" id="auName" maxlength="20" placeholder="למשל נועה"></div>
+        <div><label for="auPass">סיסמה (לפחות 6 תווים)</label><input type="password" id="auPass" dir="ltr" autocomplete="current-password" minlength="6" required style="width:100%;font:16px Rubik,sans-serif;padding:11px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--ink)"></div>
+        <button class="btn solid" type="submit" id="auGo">כניסה</button>
+        <p class="small" id="auMsg" aria-live="polite" style="font-weight:600;margin:0"></p>
+      </form>
+      <p class="small" style="margin:12px 0 0">🔒 אין צורך באימייל. אף אחד לא יכול לחפש אותך. רק מי שיודע את שם המשתמש המדויק שלך יכול לשלוח בקשת חברות, ורק את מאשרת.</p>
+    </div>
+    <div id="meBox" hidden>
+      <div class="acts" style="justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span id="meName" style="font-weight:600"></span>
+        <button class="mini" id="logout">יציאה</button>
+      </div>
+      <div class="card" style="box-shadow:none;margin-bottom:14px">
+        <h3>➕ הוספת חבר/ה</h3>
+        <form id="addFriend" class="acts" style="align-items:center">
+          <input type="text" id="afUser" dir="ltr" placeholder="שם המשתמש של החבר/ה" autocapitalize="off" spellcheck="false" maxlength="15" style="flex:1 1 180px;width:auto" aria-label="שם המשתמש של החבר או החברה">
+          <button class="btn solid" type="submit">שלחי בקשה</button>
+        </form>
+        <p class="small" id="afMsg" aria-live="polite" style="font-weight:600;margin:8px 0 0"></p>
+      </div>
+      <div id="reqBox" class="card" hidden style="box-shadow:none;margin-bottom:14px"><h3>📬 בקשות חברות</h3><ul class="list" id="reqList"></ul></div>
+      <div id="sentBox" hidden style="margin-bottom:14px"><p class="small" id="sentList"></p></div>
+      <h3>💛 מה החברים מרגישים</h3>
+      <ul class="list" id="friendList"></ul>
+      <p class="small" id="noFriends">עוד אין לך חברים כאן. הוסיפי חבר/ה לפי שם המשתמש שלהם.</p>
+      <div class="card" style="box-shadow:none;margin-top:16px">
+        <h3>📤 מה החברים רואים ממני</h3>
+        <p class="small" id="myShared" style="margin:0 0 8px">עוד לא שיתפת מצב רוח.</p>
+        <div class="acts"><button class="mini" id="unshare" hidden>🙈 הסתירי את מצב הרוח שלי</button></div>
+        <p class="small" style="margin:8px 0 0">כדי לשתף: בוחרים מצב רוח ← "📤 שתפי את מצב הרוח" ← "👯 שתפי עם החברים באפליקציה".</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div data-tab="dj" class="band">
@@ -382,13 +434,13 @@ h1{font-size:clamp(30px,5vw,44px)}
   </details>
 </div>
 
-<div data-tab="diary" class="band">
+<div data-tab="more" class="band">
   <h2>📅 היומן שלי: השבוע האחרון</h2>
   <div class="week" id="week"></div>
   <p class="small" id="weekSum" style="margin-top:12px"></p>
 </div>
 
-<div data-tab="diary" class="band">
+<div data-tab="more" class="band">
   <h2>📊 הסטטיסטיקה שלי</h2>
   <div class="statgrid" id="statNums"></div>
   <div class="two" style="margin-top:14px">
@@ -648,6 +700,10 @@ function showSong(){
         <button class="btn" id="shareCopy">📋 העתיקי</button>
       </div>
       <p class="small" id="shareMsg" aria-live="polite" style="font-weight:600;margin:8px 0 0"></p>
+      <div id="appShare" style="margin-top:14px;padding-top:12px;border-top:1.5px dashed var(--line)">
+        <b>👯 שתפי עם החברים באפליקציה</b>
+        <div id="appShareBody" class="small" style="margin-top:6px"></div>
+      </div>
     </div>
     <div class="row">
       <div class="box"><b>📺 מה לראות (בלי קשר לשיר)</b>${m.show.map(x => `<p>• ${x}</p>`).join('')}
@@ -1089,7 +1145,7 @@ $('logos').addEventListener('click', e => { const b = e.target.closest('[data-lo
 renderLogos();
 
 // התפריט: מציג רק את החלק שבחרת
-const TABS = ['mood','playlist','songs','dj','game','diary','more'];
+const TABS = ['mood','playlist','songs','friends','dj','game','more'];
 function go(t, push){
   if (!TABS.includes(t)) t = 'mood';
   document.querySelectorAll('[data-tab]').forEach(b => { b.classList.toggle('off', b.dataset.tab !== t); if (b.dataset.tab === t) replay(b); });
@@ -1099,7 +1155,8 @@ function go(t, push){
   window.scrollTo(0,0);
   if (t === 'dj') drawCurve(playlist.map(byId).filter(Boolean));
   if (t === 'songs') renderAll();
-  if (t === 'diary') renderStats();
+  if (t === 'more') renderStats();
+  if (t === 'friends') friendsInit();
 }
 $('tabs').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go, true); });
 window.addEventListener('hashchange', () => go(location.hash.slice(1)));
@@ -1109,7 +1166,7 @@ $('res').addEventListener('click', e => {
   if (e.target.closest('[data-act="share"]')) {
     const box = $('shareBox'), open = box.hidden; box.hidden = !open;
     e.target.closest('[data-act="share"]').setAttribute('aria-expanded', open);
-    if (open) updateShare(); return;
+    if (open) { updateShare(); renderAppShare(); } return;
   }
   const md = e.target.closest('[data-mode]');
   if (md && mood) { mode = md.dataset.mode; song = songForMood(moods[mood]); showSong(); return; }
@@ -1322,6 +1379,195 @@ $('swapAll').addEventListener('click', () => {
   next.forEach(x => seenRecs.add(x.s.id));
   curRecs = next; renderRecs(); $('swapMsg').textContent = msg;
 });
+
+// ===== חברים: Firebase (שרת של גוגל) =====
+const FB_CFG = {
+  apiKey: "AIzaSyBeMNQmE7Z0WKXG1gBrHAo2AoSxTaLonPk",
+  authDomain: "mood-app-863e5.firebaseapp.com",
+  projectId: "mood-app-863e5",
+  storageBucket: "mood-app-863e5.firebasestorage.app",
+  messagingSenderId: "379010604166",
+  appId: "1:379010604166:web:b484ea368daa46bd8c0507"
+};
+const FBV = '10.12.2';
+let fb = null, fbTried = false, me = null, myUser = null, friendsArr = [], friendMoods = {}, myMood = null, fUnsubs = [], authMode = 'login';
+const unameOk = u => /^[a-z0-9_]{3,15}$/.test(u);
+const unameEmail = u => u + '@users.mood-app.app';
+const ago = ms => { const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? 'עכשיו' : m < 60 ? `לפני ${m} דק'` : m < 1440 ? `לפני ${Math.round(m/60)} שע'` : `לפני ${Math.round(m/1440)} ימים`; };
+const authErr = e => ({
+  'auth/email-already-in-use': 'שם המשתמש הזה כבר תפוס. נסי שם אחר.',
+  'auth/invalid-credential': 'שם משתמש או סיסמה לא נכונים.',
+  'auth/wrong-password': 'שם משתמש או סיסמה לא נכונים.',
+  'auth/user-not-found': 'שם משתמש או סיסמה לא נכונים.',
+  'auth/weak-password': 'הסיסמה צריכה להיות לפחות 6 תווים.',
+  'auth/too-many-requests': 'יותר מדי ניסיונות. חכי כמה דקות ונסי שוב.',
+  'auth/network-request-failed': 'אין אינטרנט כרגע.',
+  'auth/operation-not-allowed': 'ההרשמה עוד לא הופעלה ב-Firebase (Email/Password).',
+  'auth/unauthorized-domain': 'האתר עוד לא אושר ב-Firebase (Authorized domains).'
+}[e && e.code] || 'משהו השתבש: ' + (e && (e.code || e.message)));
+async function fbLoad(){
+  if (fb || fbTried) return fb;
+  fbTried = true;
+  try {
+    const base = `https://www.gstatic.com/firebasejs/${FBV}/`;
+    const [A0, A, F] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+    const app = A0.initializeApp(FB_CFG);
+    fb = {auth: A.getAuth(app), db: F.getFirestore(app), A, F};
+    A.onAuthStateChanged(fb.auth, u => { me = u; onAuth(); });
+  } catch (e) { fb = null; }
+  return fb;
+}
+async function friendsInit(){
+  const ok = await fbLoad();
+  if (!ok) {
+    $('fbStatus').hidden = false;
+    $('fbStatus').textContent = '👯 החברים עובדים רק באפליקציה המותקנת (aviosis-cell.github.io/MOOD-APP), כשיש אינטרנט.';
+    $('authBox').hidden = true; $('meBox').hidden = true;
+  }
+}
+function setAuthMode(m){
+  authMode = m;
+  document.querySelectorAll('[data-auth]').forEach(b => b.setAttribute('aria-selected', b.dataset.auth === m));
+  $('auNameRow').hidden = m !== 'signup';
+  $('auGo').textContent = m === 'signup' ? 'הרשמה' : 'כניסה';
+  $('auPass').autocomplete = m === 'signup' ? 'new-password' : 'current-password';
+  $('auMsg').textContent = '';
+}
+document.querySelector('#authBox .seg').addEventListener('click', e => { const b = e.target.closest('[data-auth]'); if (b) setAuthMode(b.dataset.auth); });
+$('authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const u = $('auUser').value.trim().toLowerCase(), p = $('auPass').value;
+  if (!unameOk(u)) { $('auMsg').textContent = 'שם משתמש: 3–15 תווים, רק אותיות באנגלית, מספרים ו-_'; return; }
+  if (p.length < 6) { $('auMsg').textContent = 'הסיסמה צריכה להיות לפחות 6 תווים.'; return; }
+  $('auGo').disabled = true; $('auMsg').textContent = '...רגע';
+  const {A, F, auth, db} = fb;
+  try {
+    if (authMode === 'signup') {
+      const name = ($('auName').value.trim() || u).slice(0, 20);
+      const cred = await A.createUserWithEmailAndPassword(auth, unameEmail(u), p);
+      await F.setDoc(F.doc(db, 'usernames', u), {uid: cred.user.uid});
+      await F.setDoc(F.doc(db, 'users', cred.user.uid), {username: u, name});
+      myUser = {username: u, name}; onAuth();
+    } else {
+      await A.signInWithEmailAndPassword(auth, unameEmail(u), p);
+    }
+    $('auPass').value = '';
+  } catch (err) { $('auMsg').textContent = authErr(err); }
+  $('auGo').disabled = false;
+});
+$('logout').addEventListener('click', () => fb && fb.A.signOut(fb.auth));
+async function onAuth(){
+  fUnsubs.forEach(f => f()); fUnsubs = []; friendsArr = []; friendMoods = {}; myMood = null;
+  $('fbStatus').hidden = true;
+  if (!me) { $('authBox').hidden = false; $('meBox').hidden = true; myUser = null; return; }
+  $('authBox').hidden = true; $('meBox').hidden = false;
+  const {F, db} = fb;
+  if (!myUser) { try { const d = await F.getDoc(F.doc(db, 'users', me.uid)); myUser = d.exists() ? d.data() : {username: me.email.split('@')[0], name: me.email.split('@')[0]}; } catch (e) { myUser = {username: '?', name: '?'}; } }
+  $('meName').textContent = `שלום ${myUser.name} 👋  (שם המשתמש שלך: ${myUser.username})`;
+  // חברים
+  fUnsubs.push(F.onSnapshot(F.collection(db, 'users', me.uid, 'friends'), snap => {
+    friendsArr = snap.docs.map(d => ({uid: d.id, ...d.data()})); renderFriends(); renderAppShare();
+  }));
+  // בקשות שקיבלתי
+  fUnsubs.push(F.onSnapshot(F.query(F.collection(db, 'requests'), F.where('to', '==', me.uid)), snap => {
+    const reqs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    $('reqBox').hidden = !reqs.length;
+    $('reqList').innerHTML = reqs.map(r => `<li><span class="grow"><b>${esc(r.fromName)}</b> <span class="small" dir="ltr">@${esc(r.fromUser)}</span> רוצה להיות חבר/ה שלך</span>
+      <button class="mini" data-accept="${esc(r.id)}">✅ אשרי</button><button class="mini" data-decline="${esc(r.id)}">✖ דחי</button></li>`).join('');
+    reqCache = reqs;
+  }));
+  // בקשות ששלחתי
+  fUnsubs.push(F.onSnapshot(F.query(F.collection(db, 'requests'), F.where('from', '==', me.uid)), snap => {
+    const s = snap.docs.map(d => d.data().toUser);
+    $('sentBox').hidden = !s.length; $('sentList').textContent = '⏳ מחכה לאישור: ' + s.join(', ');
+  }));
+  // מצבי הרוח שהחברים שיתפו איתי
+  fUnsubs.push(F.onSnapshot(F.query(F.collection(db, 'moods'), F.where('visibleTo', 'array-contains', me.uid)), snap => {
+    friendMoods = {}; snap.docs.forEach(d => friendMoods[d.id] = d.data()); renderFriends();
+  }));
+  // מה שאני שיתפתי
+  fUnsubs.push(F.onSnapshot(F.doc(db, 'moods', me.uid), d => {
+    myMood = d.exists() ? d.data() : null;
+    $('unshare').hidden = !myMood;
+    $('myShared').textContent = myMood && moods[myMood.k] ? `${moods[myMood.k].emo} ${moods[myMood.k].name} · "${myMood.t}" · ${myMood.visibleTo.length} חברים רואים` : 'עוד לא שיתפת מצב רוח.';
+  }));
+}
+let reqCache = [];
+function renderFriends(){
+  $('noFriends').hidden = !!friendsArr.length;
+  $('friendList').innerHTML = friendsArr.map(f => {
+    const m = friendMoods[f.uid], md = m && moods[m.k];
+    const s = m ? (all().find(x => x.title === m.t && x.artist === m.a) || {id: 'f', title: m.t, artist: m.a || '', yt: /^[\w-]{11}$/.test(m.y || '') ? m.y : ''}) : null;
+    return `<li style="${md ? 'background:color-mix(in srgb,' + md.main + ' 25%,var(--card))' : ''}"><span class="grow">
+      <b>${esc(f.name)}</b> <span class="small" dir="ltr">@${esc(f.username || '')}</span><br>
+      ${md ? `<span class="fmood">${md.emo} ${md.name}</span> <span class="small">· ${m.at ? ago(m.at.toMillis()) : ''}</span><br><span class="small">🎵 ${esc(m.t)} · ${esc(m.a || '')}</span>` : '<span class="small">עוד לא שיתפה איתך מצב רוח</span>'}</span>
+      ${s ? listen(s, 'mini') : ''}<button class="mini" data-unfriend="${esc(f.uid)}">הסירי</button></li>`;
+  }).join('');
+}
+// אישור / דחייה / הסרה
+$('reqList').addEventListener('click', async e => {
+  const a = e.target.closest('[data-accept]'), d = e.target.closest('[data-decline]');
+  const {F, db} = fb;
+  try {
+    if (a) {
+      const r = reqCache.find(x => x.id === a.dataset.accept); if (!r) return;
+      a.disabled = true;
+      await F.setDoc(F.doc(db, 'users', me.uid, 'friends', r.from), {name: r.fromName, username: r.fromUser, since: F.serverTimestamp()});
+      await F.setDoc(F.doc(db, 'users', r.from, 'friends', me.uid), {name: myUser.name, username: myUser.username, since: F.serverTimestamp()});
+      await F.deleteDoc(F.doc(db, 'requests', r.id));
+    }
+    if (d) await F.deleteDoc(F.doc(db, 'requests', d.dataset.decline));
+  } catch (err) { alertMsg('afMsg', 'לא הצלחתי: ' + (err.code || err.message)); }
+});
+let unfArmed = null;
+$('friendList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-unfriend]'); if (!b) return;
+  if (unfArmed !== b.dataset.unfriend) { unfArmed = b.dataset.unfriend; b.textContent = 'בטוחה? לחצי שוב'; return; }
+  const fid = b.dataset.unfriend, {F, db} = fb; unfArmed = null;
+  try {
+    await F.deleteDoc(F.doc(db, 'users', me.uid, 'friends', fid));
+    await F.deleteDoc(F.doc(db, 'users', fid, 'friends', me.uid));
+    if (myMood && myMood.visibleTo.includes(fid)) await F.updateDoc(F.doc(db, 'moods', me.uid), {visibleTo: myMood.visibleTo.filter(x => x !== fid)});
+  } catch (err) { alertMsg('afMsg', 'לא הצלחתי להסיר: ' + (err.code || err.message)); }
+});
+const alertMsg = (id, t) => { $(id).textContent = t; };
+// שליחת בקשת חברות לפי שם משתמש מדויק
+$('addFriend').addEventListener('submit', async e => {
+  e.preventDefault();
+  const u = $('afUser').value.trim().toLowerCase().replace(/^@/, '');
+  if (!unameOk(u)) { alertMsg('afMsg', 'שם משתמש: 3–15 תווים, אותיות באנגלית, מספרים ו-_'); return; }
+  if (u === myUser.username) { alertMsg('afMsg', 'זה שם המשתמש שלך 😄'); return; }
+  const {F, db} = fb;
+  try {
+    const d = await F.getDoc(F.doc(db, 'usernames', u));
+    if (!d.exists()) { alertMsg('afMsg', `לא מצאתי משתמש בשם "${u}". בדקי שהאיות מדויק.`); return; }
+    const to = d.data().uid;
+    if (friendsArr.some(f => f.uid === to)) { alertMsg('afMsg', 'אתן כבר חברות! 💛'); return; }
+    await F.setDoc(F.doc(db, 'requests', me.uid + '_' + to), {from: me.uid, to, fromName: myUser.name, fromUser: myUser.username, toUser: u, at: F.serverTimestamp()});
+    alertMsg('afMsg', `✅ נשלחה בקשה ל-${u}. כשהיא תאשר, תראו אחת את השנייה.`); $('afUser').value = '';
+  } catch (err) { alertMsg('afMsg', 'לא הצלחתי לשלוח: ' + (err.code || err.message)); }
+});
+// שיתוף מצב הרוח עם חברים נבחרים
+function renderAppShare(){
+  const box = $('appShareBody'); if (!box) return;
+  if (!fb || !me) { box.innerHTML = 'כדי לשתף כאן, היכנסי בלשונית <b>👯 חברים</b>.'; return; }
+  if (!friendsArr.length) { box.innerHTML = 'עוד אין לך חברים באפליקציה. הוסיפי בלשונית <b>👯 חברים</b>.'; return; }
+  box.innerHTML = `<div>מי יראה?</div><div class="fchk">${friendsArr.map(f => `<label><input type="checkbox" data-fpick="${esc(f.uid)}" checked> ${esc(f.name)}</label>`).join('')}</div>
+    <button class="btn solid" id="shareApp">👯 שתפי</button> <span id="shareAppMsg" style="font-weight:600"></span>`;
+}
+document.addEventListener('click', async e => {
+  if (e.target.id !== 'shareApp' || !song || !mood) return;
+  const picks = [...document.querySelectorAll('[data-fpick]:checked')].map(x => x.dataset.fpick);
+  if (!picks.length) { $('shareAppMsg').textContent = 'בחרי לפחות חבר/ה אחד/ת'; return; }
+  const {F, db} = fb;
+  try {
+    await F.setDoc(F.doc(db, 'moods', me.uid), {name: myUser.name, k: mood, t: song.title, a: song.artist, y: song.yt || '', at: F.serverTimestamp(), visibleTo: picks});
+    $('shareAppMsg').textContent = `✅ שותף עם ${picks.length} ${picks.length === 1 ? 'חבר/ה' : 'חברים'}!`;
+  } catch (err) { $('shareAppMsg').textContent = 'לא הצלחתי: ' + (err.code || err.message); }
+});
+$('unshare').addEventListener('click', async () => { try { await fb.F.deleteDoc(fb.F.doc(fb.db, 'moods', me.uid)); } catch (e) {} });
+// אם כבר מחוברים, טוענים את החברים ברקע כדי שהשיתוף יעבוד מיד
+if (location.protocol === 'https:' && !location.hostname.endsWith('claude.ai') && !location.hostname.includes('claudeusercontent')) friendsInit();
 renderAll(); renderStats();
 }
 </script>
