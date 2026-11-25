@@ -123,6 +123,9 @@ input[type=range]{width:100%;accent-color:var(--deep);height:30px}
 
 .fig{position:relative}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
 .djs{display:flex;align-items:center;gap:10px;background:var(--soft);border-radius:16px;padding:10px 12px;flex-wrap:wrap}
+.djs.now{outline:3px solid var(--deep);outline-offset:2px}
+#djPlayerBox .vid{aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#1a1300;margin:10px 0}
+#djPlayerBox iframe{width:100%;height:100%;display:block;border:0}
 .djs .n{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:800;flex:none}
 .link{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 6px 0;padding:8px 14px;border-inline-start:6px solid var(--c);margin-inline-start:24px}
 .link select{font:15px Rubik,sans-serif;min-height:40px;border-radius:12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:0 8px}
@@ -360,13 +363,25 @@ h1{font-size:clamp(30px,5vw,44px)}
     <div class="fig" id="curveBox" style="min-height:150px"><svg id="curve" role="img" aria-label="עקומת אנרגיה"></svg></div>
     <div class="acts" style="margin:12px 0 16px">
       <button class="btn solid" id="autoDJ">🪄 סדרי לי כמו דיג'יי</button>
-      <a class="btn solid" id="djYtAll" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">📺 כל הסט ביוטיוב</a>
+      <button class="btn solid" id="djHere">🎧 נגני כאן לפי הסדר והמעברים</button>
+      <a class="btn" id="djYtAll" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">📺 כל הסט ביוטיוב</a>
       <a class="btn" id="djPlay" style="display:inline-flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="#">▶️ נגני את הסט</a>
       <button class="btn" id="copyList">📋 העתיקי רשימה</button>
       <span class="small" id="djScore"></span>
     </div>
     <p class="small" id="copyMsg" aria-live="polite" style="margin:-6px 0 10px"></p>
     <textarea id="copyBox" hidden readonly rows="6" style="width:100%;font:15px Rubik,sans-serif;border-radius:14px;border:2px solid var(--ink);padding:10px;margin-bottom:12px;background:var(--card);color:var(--ink)" aria-label="רשימת השירים להעתקה"></textarea>
+    <div id="djPlayerBox" hidden class="card" style="box-shadow:none;margin-bottom:14px">
+      <p id="djNow" style="margin:0;font-weight:600"></p>
+      <div class="vid"><div id="djYt"></div></div>
+      <div class="acts" style="margin:0">
+        <button class="mini" id="djPrev" aria-label="השיר הקודם">⏮️</button>
+        <button class="mini" id="djToggle" aria-label="הפסקה או המשך">⏯️</button>
+        <button class="mini" id="djSkip" aria-label="השיר הבא">⏭️</button>
+        <button class="mini" id="djStopB" aria-label="עצירה">⏹️</button>
+      </div>
+      <p class="small" id="djPMsg" aria-live="polite" style="margin:8px 0 0"></p>
+    </div>
     <div id="dj"></div>
     <p class="small" id="djEmpty">תוסיפי לפחות 2 שירים לפלייליסט כדי להתחיל לערוך סט.</p>
   </div>
@@ -1108,7 +1123,118 @@ function updateDjPlay(){
   b.textContent = djPos === 0 ? `▶️ נגני את הסט (${s.title})` : `⏭️ הבא בסט: ${s.title} (${djPos % list.length + 1}/${list.length})`;
 }
 $('djPlay').addEventListener('click', () => { const list = playlist.map(byId).filter(Boolean); if (list.length) logListen(list[djPos % list.length].id); setTimeout(() => { djPos++; updateDjPlay(); }, 50); });
-const djObs = new MutationObserver(() => { if (djPos >= playlist.length) djPos = 0; updateDjPlay(); }); djObs.observe($('dj'), {childList:true});
+// נגן דיג'יי בתוך האפליקציה: מנגן לפי הסדר שקבעת ועושה את המעברים שבחרת
+const TR_SEC = {fade:8, echo:5, slow:6, drop:4, cut:0};
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let ytP = null, ytApi = null, djQ = [], djI = 0, djTimer = null, djBusy = false, rampT = null, djOn = false;
+function loadYtApi(){
+  if (window.YT && YT.Player) return Promise.resolve();
+  if (ytApi) return ytApi;
+  ytApi = new Promise((res, rej) => {
+    window.onYouTubeIframeAPIReady = () => res();
+    const sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; sc.onerror = rej; document.head.appendChild(sc);
+    setTimeout(() => rej(new Error('timeout')), 12000);
+  });
+  ytApi.catch(() => { ytApi = null; });
+  return ytApi;
+}
+const trFor = (a, b) => (a && b) ? (trans[a.id + '>' + b.id] || suggestTr(a, b)) : 'cut';
+const trName = k => (TR.find(t => t[0] === k) || [0, ''])[1];
+function djShow(msg){
+  const s = djQ[djI], n = djQ[djI + 1];
+  $('djNow').innerHTML = s ? `🎶 עכשיו (${djI + 1}/${djQ.length}): <b>${esc(s.title)}</b> · ${esc(s.artist)}` +
+    (n ? `<br><span class="small">אחריו: ${esc(n.title)} · ${trName(trFor(s, n))}</span>` : '<br><span class="small">זה השיר האחרון בסט 🏁</span>') : '';
+  if (msg !== undefined) $('djPMsg').textContent = msg;
+  const ids = playlist.map(byId).filter(Boolean).map(x => x.id);
+  document.querySelectorAll('#dj .djs').forEach((el, i) => el.classList.toggle('now', djOn && !!s && ids[i] === s.id));
+}
+function rampVol(from, to, ms, done){
+  clearInterval(rampT); const t0 = Date.now();
+  rampT = setInterval(() => {
+    const k = Math.min(1, (Date.now() - t0) / ms);
+    try { ytP.setVolume(Math.round(from + (to - from) * k)); } catch (e) {}
+    if (k >= 1) { clearInterval(rampT); done && done(); }
+  }, 100);
+}
+function djLoad(i){
+  clearInterval(rampT); djBusy = false;
+  if (i < 0) i = 0;
+  const s = djQ[i];
+  if (!s) { djStop('🏁 הסט נגמר! איזה סט 🎉'); return; }
+  const prev = djQ[i - 1], tr = trFor(prev, s);
+  djI = i;
+  try { ytP.setPlaybackRate(1); } catch (e) {}
+  ytP.loadVideoById(s.yt);
+  logListen(s.id);
+  if (prev && !isIOS && (tr === 'fade' || tr === 'echo' || tr === 'slow')) { ytP.setVolume(0); rampVol(0, 100, 2500); }
+  else { try { ytP.setVolume(100); } catch (e) {} }
+  djShow('');
+}
+function djTick(){
+  if (!ytP || !djOn || djBusy || !ytP.getDuration) return;
+  if (ytP.getPlayerState() !== 1) return;
+  const d = ytP.getDuration(), t = ytP.getCurrentTime(), s = djQ[djI], n = djQ[djI + 1];
+  if (!d || !n) return;
+  const tr = trFor(s, n), sec = TR_SEC[tr];
+  if (!sec || d - t > sec) return;
+  const go = () => djLoad(djI + 1);
+  if (tr === 'drop') {
+    // בנייה: השיר מאיץ, שנייה של שקט, ואז הבא נכנס בבום
+    djBusy = true;
+    try { ytP.setPlaybackRate(1.25); } catch (e) {}
+    setTimeout(() => { try { ytP.pauseVideo(); } catch (e) {} setTimeout(go, 700); }, 2600);
+  } else if (isIOS) {
+    // באייפון אי אפשר לשנות ווליום מתוך אתר, אז רק ההאטה עובדת. המעבר קורה כשהשיר נגמר
+    if (tr === 'slow') { djBusy = true; try { ytP.setPlaybackRate(0.75); } catch (e) {} setTimeout(go, (d - t) * 1000 / 0.75); }
+  } else if (tr === 'fade') {
+    djBusy = true; rampVol(100, 0, sec * 1000, go);
+  } else if (tr === 'echo') {
+    djBusy = true; rampVol(100, 25, 1500, () => rampVol(25, 75, 900, () => rampVol(75, 0, 2300, go)));
+  } else if (tr === 'slow') {
+    djBusy = true; try { ytP.setPlaybackRate(0.75); } catch (e) {}
+    setTimeout(() => { try { ytP.setPlaybackRate(0.5); } catch (e) {} }, 2500);
+    rampVol(100, 0, sec * 1000, go);
+  }
+}
+function djStop(msg){
+  djOn = false; clearInterval(djTimer); clearInterval(rampT); djBusy = false;
+  try { ytP.stopVideo(); ytP.setPlaybackRate(1); } catch (e) {}
+  djShow(msg || '⏹️ הסט נעצר.');
+}
+function djQueue(){ return playlist.map(byId).filter(x => x && x.yt); }
+$('djHere').addEventListener('click', async () => {
+  djQ = djQueue();
+  const missing = playlist.map(byId).filter(x => x && !x.yt).length;
+  $('djPlayerBox').hidden = false;
+  if (!djQ.length) { $('djPMsg').textContent = 'לשירים בפלייליסט אין קישור ליוטיוב, אז אין מה לנגן כאן.'; return; }
+  $('djPMsg').textContent = '...טוען את הנגן';
+  try { await loadYtApi(); }
+  catch (e) { $('djPMsg').textContent = 'הנגן לא נטען כאן. הוא עובד באפליקציה המותקנת (aviosis-cell.github.io/MOOD-APP) כשיש אינטרנט.'; return; }
+  djOn = true; djI = 0;
+  const note = missing ? `⚠️ ${missing} שירים בלי קישור ליוטיוב, עליהם הנגן ידלג.` : '';
+  if (!ytP) {
+    ytP = new YT.Player('djYt', {
+      width: '100%', height: '100%', videoId: djQ[0].yt,
+      playerVars: {autoplay: 1, playsinline: 1, rel: 0},
+      events: {
+        onReady: e => { e.target.setVolume(100); e.target.playVideo(); logListen(djQ[0].id); djShow(note); },
+        onStateChange: e => { if (e.data === 0 && djOn && !djBusy) djLoad(djI + 1); },
+        onError: () => { if (!djOn) return; $('djPMsg').textContent = '🚫 השיר הזה לא מרשה לנגן אותו מחוץ ליוטיוב. מדלגת לבא...'; setTimeout(() => djLoad(djI + 1), 1200); }
+      }
+    });
+  } else { djLoad(0); djShow(note); }
+  clearInterval(djTimer); djTimer = setInterval(djTick, 400);
+  $('djPlayerBox').scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+$('djPrev').addEventListener('click', () => { if (ytP && djQ.length) { djOn = true; clearInterval(djTimer); djTimer = setInterval(djTick, 400); djLoad(djI - 1); } });
+$('djSkip').addEventListener('click', () => { if (ytP && djQ.length) { djOn = true; clearInterval(djTimer); djTimer = setInterval(djTick, 400); djLoad(djI + 1); } });
+$('djToggle').addEventListener('click', () => { if (!ytP || !ytP.getPlayerState) return; ytP.getPlayerState() === 1 ? ytP.pauseVideo() : ytP.playVideo(); });
+$('djStopB').addEventListener('click', () => djStop());
+const djObs = new MutationObserver(() => {
+  if (djPos >= playlist.length) djPos = 0; updateDjPlay();
+  // אם שינית סדר או מעבר בזמן שהסט מתנגן, הנגן מתעדכן בלי לעצור
+  if (djOn && djQ[djI]) { const cur = djQ[djI].id; djQ = djQueue(); djI = Math.max(0, djQ.findIndex(x => x.id === cur)); djShow(); }
+}); djObs.observe($('dj'), {childList:true});
 updateDjPlay();
 renderLists(); $('djWhich').textContent = `עורכים עכשיו את: ${listLabel(active)}`;
 
